@@ -109,5 +109,25 @@ export const creators: Creator[] = [
     niches: ['Beauty', 'Fashion', 'Lifestyle', 'UGC Ads'],
     brandCollabs: 13,
     videoFile: 'vimi.mp4'
+  },
+  {
+    id: 11,
+    name: 'Priya Verma',
+    handle: '@priyavlogs',
+    followers: '45.2K',
+    avgViews: '62K',
+    niches: ['Travel', 'Lifestyle', 'Food', 'Fashion', 'Beauty'],
+    brandCollabs: 18,
+    videoFile: 'priya.mp4'
+  },
+  {
+    id: 12,
+    name: 'Neha Sharma',
+    handle: '@nehacreates',
+    followers: '12.8K',
+    avgViews: '32K',
+    niches: ['Home', 'DIY', 'Lifestyle', 'UGC Ads', 'Fashion'],
+    brandCollabs: 10,
+    videoFile: 'neha.mp4'
   }
 ];
