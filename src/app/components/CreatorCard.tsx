@@ -109,7 +109,6 @@ export function CreatorCard({ creator }: CreatorCardProps) {
       </div>
 
       <div className="creator-card__info">
-        <p className="creator-card__name">{creator.name}</p>
         <div className="creator-card__stats">
           <div className="stat-item">
             <span className="stat-label">Followers</span>
