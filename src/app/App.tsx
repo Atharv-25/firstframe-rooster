@@ -20,7 +20,7 @@ export default function App() {
             <span className="section-title">Creator Reels</span>
           </div>
           <p className="section-description">
-            Starting Point: These are UGC demo reels from our 2025 creator roster — hover any video to preview.
+            Starting Point: These are UGC demo reels from our 2026 creator roster — hover any video to preview.
           </p>
         </div>
 
