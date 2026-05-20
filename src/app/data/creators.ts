@@ -22,6 +22,16 @@ export const creators: Creator[] = [
   },
   {
     id: 2,
+    name: 'Sumedha Goel',
+    handle: '@sumeedhhaa',
+    followers: '7.26K',
+    avgViews: '90K',
+    niches: ['Fashion', 'Beauty', 'Food'],
+    brandCollabs: 0,
+    videoFile: 'SUMEDHA.mp4'
+  },
+  {
+    id: 3,
     name: 'Sehajpreet Kaur',
     handle: '@sehajpreet_126',
     followers: '4.1K',
@@ -31,7 +41,17 @@ export const creators: Creator[] = [
     videoFile: 'sehajpreet.MOV'
   },
   {
-    id: 3,
+    id: 4,
+    name: 'Rhythm Gupta',
+    handle: '@rhhytthhmm',
+    followers: '6.58K',
+    avgViews: '70K',
+    niches: ['Fashion', 'Beauty', 'Lifestyle'],
+    brandCollabs: 0,
+    videoFile: 'RHYTHM.mp4'
+  },
+  {
+    id: 5,
     name: 'Siya Uppal',
     handle: '@siyauppall',
     followers: '735',
@@ -41,7 +61,7 @@ export const creators: Creator[] = [
     videoFile: 'siya.MP4'
   },
   {
-    id: 4,
+    id: 6,
     name: 'Jewel Lopes',
     handle: '@jewel_lopes',
     followers: '2.1K',
@@ -51,7 +71,7 @@ export const creators: Creator[] = [
     videoFile: 'jewel.mp4'
   },
   {
-    id: 5,
+    id: 7,
     name: 'Aniya Parihar',
     handle: '@blush_berry24',
     followers: '6.46K',
@@ -61,7 +81,27 @@ export const creators: Creator[] = [
     videoFile: 'aniya parihar.mp4'
   },
   {
-    id: 6,
+    id: 8,
+    name: 'Khushi',
+    handle: '@hasikhushie',
+    followers: '8.75K',
+    avgViews: '45K',
+    niches: ['UGC Ads', 'Beauty', 'Lifestyle'],
+    brandCollabs: 0,
+    videoFile: 'KHUSHI.mp4'
+  },
+  {
+    id: 9,
+    name: 'Rishika Jain',
+    handle: '@rishika.jain17',
+    followers: '4.83K',
+    avgViews: '35K',
+    niches: ['Fashion', 'Lifestyle', 'Beauty'],
+    brandCollabs: 0,
+    videoFile: 'RISHIKA.mp4'
+  },
+  {
+    id: 10,
     name: 'Riya Maheshwari',
     handle: '@therirrijournal',
     followers: '16.1K',
@@ -71,7 +111,17 @@ export const creators: Creator[] = [
     videoFile: 'riya.mp4'
   },
   {
-    id: 7,
+    id: 11,
+    name: 'Yashika Verma',
+    handle: '@yashika_vermaaa',
+    followers: '9.09K',
+    avgViews: '25K',
+    niches: ['Beauty', 'Lifestyle', 'Fashion', 'Comedy'],
+    brandCollabs: 0,
+    videoFile: 'YASHIKA.mp4'
+  },
+  {
+    id: 12,
     name: 'Negar Mansuri',
     handle: '@negarmansuri_',
     followers: '1.22K',
@@ -81,7 +131,7 @@ export const creators: Creator[] = [
     videoFile: 'negarmansuri.mp4'
   },
   {
-    id: 8,
+    id: 13,
     name: 'Aryahi Barde',
     handle: '@aaryahibarde',
     followers: '12.6K',
@@ -91,7 +141,17 @@ export const creators: Creator[] = [
     videoFile: 'aaryahi barade.mp4'
   },
   {
-    id: 9,
+    id: 14,
+    name: 'Rehmat Sandhu',
+    handle: '@remsandhu',
+    followers: '3.3K',
+    avgViews: '18K',
+    niches: ['Fashion', 'Lifestyle', 'Travel'],
+    brandCollabs: 0,
+    videoFile: 'REM.mp4'
+  },
+  {
+    id: 15,
     name: 'Ananya Mehta',
     handle: '@punanyamehta',
     followers: '1.7K',
@@ -101,7 +161,7 @@ export const creators: Creator[] = [
     videoFile: 'ananya.mp4'
   },
   {
-    id: 10,
+    id: 16,
     name: 'Suryaja Mowade',
     handle: '@thisissuryjja',
     followers: '8.5K',
@@ -111,7 +171,7 @@ export const creators: Creator[] = [
     videoFile: 'suryajaya.mp4'
   },
   {
-    id: 11,
+    id: 17,
     name: 'Ayushi Singh',
     handle: '@ayushisingh.png',
     followers: '2.97K',
@@ -121,7 +181,17 @@ export const creators: Creator[] = [
     videoFile: 'Aayushi Singh.mp4'
   },
   {
-    id: 12,
+    id: 18,
+    name: 'Maanika Dhawan',
+    handle: '@maanikadhawan',
+    followers: '5.62K',
+    avgViews: '8.5K',
+    niches: ['Fashion', 'Beauty', 'Lifestyle'],
+    brandCollabs: 0,
+    videoFile: 'MAANIKA.mp4'
+  },
+  {
+    id: 19,
     name: 'Shiwanshi Pandey',
     handle: '@ugcwithshiw',
     followers: '609',
@@ -131,7 +201,27 @@ export const creators: Creator[] = [
     videoFile: 'shiwanshi pandey.mp4'
   },
   {
-    id: 13,
+    id: 20,
+    name: 'Shashanki Rawat',
+    handle: '@shashanki_rawat',
+    followers: '6.27K',
+    avgViews: '7.2K',
+    niches: ['Beauty', 'Skincare', 'UGC Ads', 'Fashion'],
+    brandCollabs: 0,
+    videoFile: 'shashanki.mp4'
+  },
+  {
+    id: 21,
+    name: 'Rutuja Dhotre',
+    handle: '@__taraaaaaa_',
+    followers: '3.3K',
+    avgViews: '6.7K',
+    niches: ['Fashion', 'Lifestyle', 'Dance', 'Skincare'],
+    brandCollabs: 0,
+    videoFile: 'TARA.mp4'
+  },
+  {
+    id: 22,
     name: "Vimi D'silva",
     handle: '@with_weandme',
     followers: '167',
@@ -141,7 +231,27 @@ export const creators: Creator[] = [
     videoFile: 'vimi.mp4'
   },
   {
-    id: 14,
+    id: 23,
+    name: 'Gooncha Chhibber',
+    handle: '@gunchachhibber',
+    followers: '1.71K',
+    avgViews: '3.5K',
+    niches: ['Skincare', 'Fashion', 'Lifestyle'],
+    brandCollabs: 0,
+    videoFile: 'GUNCHA.mp4'
+  },
+  {
+    id: 24,
+    name: 'Kavya Duraisamy',
+    handle: '@glowcheck_with_k',
+    followers: '3.04K',
+    avgViews: '3.4K',
+    niches: ['Beauty', 'Skincare', 'Lifestyle'],
+    brandCollabs: 0,
+    videoFile: 'KAVYA.mp4'
+  },
+  {
+    id: 25,
     name: 'Arpita Mahajan',
     handle: '@arpitaaa.mahajan',
     followers: '850',
@@ -151,7 +261,47 @@ export const creators: Creator[] = [
     videoFile: 'arpita.MP4'
   },
   {
-    id: 15,
+    id: 26,
+    name: 'Aadrika Acharya',
+    handle: '@aadrikaa_acharya',
+    followers: '757',
+    avgViews: '2.5K',
+    niches: ['Travel', 'Beauty', 'Lifestyle'],
+    brandCollabs: 0,
+    videoFile: 'AADRIKA.mp4'
+  },
+  {
+    id: 27,
+    name: 'Ipshita Mahajan',
+    handle: '@ipshita_07__',
+    followers: '638',
+    avgViews: '2.5K',
+    niches: ['Lifestyle', 'Vlog', 'Fashion'],
+    brandCollabs: 0,
+    videoFile: 'IPSHITA MAHAJAN.mp4'
+  },
+  {
+    id: 28,
+    name: 'Akanksha Singh',
+    handle: '@akanksha.x',
+    followers: '6.9K',
+    avgViews: '2K',
+    niches: ['Beauty', 'Fashion', 'Lifestyle'],
+    brandCollabs: 0,
+    videoFile: 'AAKANSHA.mp4'
+  },
+  {
+    id: 29,
+    name: 'Astha Ajmera',
+    handle: '@allabout.astha',
+    followers: '1.28K',
+    avgViews: '1.8K',
+    niches: ['Skincare', 'Beauty', 'Makeup'],
+    brandCollabs: 0,
+    videoFile: 'ASTHA.mp4'
+  },
+  {
+    id: 30,
     name: 'Mahi Gupta',
     handle: '@mahiig_23',
     followers: '964',
