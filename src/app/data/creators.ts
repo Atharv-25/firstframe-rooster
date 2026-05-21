@@ -30,18 +30,9 @@ export const creators: Creator[] = [
     brandCollabs: 0,
     videoFile: 'SUMEDHA.mp4'
   },
+
   {
     id: 3,
-    name: 'Sehajpreet Kaur',
-    handle: '@sehajpreet_126',
-    followers: '4.1K',
-    avgViews: '85K',
-    niches: ['Lifestyle', 'Campus'],
-    brandCollabs: 11,
-    videoFile: 'sehajpreet.MOV'
-  },
-  {
-    id: 4,
     name: 'Rhythm Gupta',
     handle: '@rhhytthhmm',
     followers: '6.58K',
@@ -51,7 +42,7 @@ export const creators: Creator[] = [
     videoFile: 'RHYTHM.mp4'
   },
   {
-    id: 5,
+    id: 4,
     name: 'Siya Uppal',
     handle: '@siyauppall',
     followers: '735',
@@ -61,7 +52,7 @@ export const creators: Creator[] = [
     videoFile: 'siya.MP4'
   },
   {
-    id: 6,
+    id: 5,
     name: 'Jewel Lopes',
     handle: '@jewel_lopes',
     followers: '2.1K',
@@ -71,7 +62,7 @@ export const creators: Creator[] = [
     videoFile: 'jewel.mp4'
   },
   {
-    id: 7,
+    id: 6,
     name: 'Aniya Parihar',
     handle: '@blush_berry24',
     followers: '6.46K',
@@ -80,18 +71,9 @@ export const creators: Creator[] = [
     brandCollabs: 0,
     videoFile: 'aniya parihar.mp4'
   },
+
   {
-    id: 8,
-    name: 'Khushi',
-    handle: '@hasikhushie',
-    followers: '8.75K',
-    avgViews: '45K',
-    niches: ['UGC Ads', 'Beauty', 'Lifestyle'],
-    brandCollabs: 0,
-    videoFile: 'KHUSHI.mp4'
-  },
-  {
-    id: 9,
+    id: 7,
     name: 'Rishika Jain',
     handle: '@rishika.jain17',
     followers: '4.83K',
@@ -101,7 +83,7 @@ export const creators: Creator[] = [
     videoFile: 'RISHIKA.mp4'
   },
   {
-    id: 10,
+    id: 8,
     name: 'Riya Maheshwari',
     handle: '@therirrijournal',
     followers: '16.1K',
@@ -111,7 +93,7 @@ export const creators: Creator[] = [
     videoFile: 'riya.mp4'
   },
   {
-    id: 11,
+    id: 9,
     name: 'Yashika Verma',
     handle: '@yashika_vermaaa',
     followers: '9.09K',
@@ -121,7 +103,7 @@ export const creators: Creator[] = [
     videoFile: 'YASHIKA.mp4'
   },
   {
-    id: 12,
+    id: 10,
     name: 'Negar Mansuri',
     handle: '@negarmansuri_',
     followers: '1.22K',
@@ -131,7 +113,7 @@ export const creators: Creator[] = [
     videoFile: 'negarmansuri.mp4'
   },
   {
-    id: 13,
+    id: 11,
     name: 'Aryahi Barde',
     handle: '@aaryahibarde',
     followers: '12.6K',
@@ -141,7 +123,7 @@ export const creators: Creator[] = [
     videoFile: 'aaryahi barade.mp4'
   },
   {
-    id: 14,
+    id: 12,
     name: 'Rehmat Sandhu',
     handle: '@remsandhu',
     followers: '3.3K',
@@ -151,7 +133,7 @@ export const creators: Creator[] = [
     videoFile: 'REM.mp4'
   },
   {
-    id: 15,
+    id: 13,
     name: 'Ananya Mehta',
     handle: '@punanyamehta',
     followers: '1.7K',
@@ -161,7 +143,7 @@ export const creators: Creator[] = [
     videoFile: 'ananya.mp4'
   },
   {
-    id: 16,
+    id: 14,
     name: 'Suryaja Mowade',
     handle: '@thisissuryjja',
     followers: '8.5K',
@@ -171,7 +153,7 @@ export const creators: Creator[] = [
     videoFile: 'suryajaya.mp4'
   },
   {
-    id: 17,
+    id: 15,
     name: 'Ayushi Singh',
     handle: '@ayushisingh.png',
     followers: '2.97K',
@@ -181,7 +163,7 @@ export const creators: Creator[] = [
     videoFile: 'Aayushi Singh.mp4'
   },
   {
-    id: 18,
+    id: 16,
     name: 'Maanika Dhawan',
     handle: '@maanikadhawan',
     followers: '5.62K',
@@ -191,7 +173,7 @@ export const creators: Creator[] = [
     videoFile: 'MAANIKA.mp4'
   },
   {
-    id: 19,
+    id: 17,
     name: 'Shiwanshi Pandey',
     handle: '@ugcwithshiw',
     followers: '609',
@@ -201,7 +183,7 @@ export const creators: Creator[] = [
     videoFile: 'shiwanshi pandey.mp4'
   },
   {
-    id: 20,
+    id: 18,
     name: 'Shashanki Rawat',
     handle: '@shashanki_rawat',
     followers: '6.27K',
@@ -211,7 +193,7 @@ export const creators: Creator[] = [
     videoFile: 'shashanki.mp4'
   },
   {
-    id: 21,
+    id: 19,
     name: 'Rutuja Dhotre',
     handle: '@__taraaaaaa_',
     followers: '3.3K',
@@ -221,7 +203,7 @@ export const creators: Creator[] = [
     videoFile: 'TARA.mp4'
   },
   {
-    id: 22,
+    id: 20,
     name: "Vimi D'silva",
     handle: '@with_weandme',
     followers: '167',
@@ -231,7 +213,7 @@ export const creators: Creator[] = [
     videoFile: 'vimi.mp4'
   },
   {
-    id: 23,
+    id: 21,
     name: 'Gooncha Chhibber',
     handle: '@gunchachhibber',
     followers: '1.71K',
@@ -241,7 +223,7 @@ export const creators: Creator[] = [
     videoFile: 'GUNCHA.mp4'
   },
   {
-    id: 24,
+    id: 22,
     name: 'Kavya Duraisamy',
     handle: '@glowcheck_with_k',
     followers: '3.04K',
@@ -251,7 +233,7 @@ export const creators: Creator[] = [
     videoFile: 'KAVYA.mp4'
   },
   {
-    id: 25,
+    id: 23,
     name: 'Arpita Mahajan',
     handle: '@arpitaaa.mahajan',
     followers: '850',
@@ -261,7 +243,7 @@ export const creators: Creator[] = [
     videoFile: 'arpita.MP4'
   },
   {
-    id: 26,
+    id: 24,
     name: 'Aadrika Acharya',
     handle: '@aadrikaa_acharya',
     followers: '757',
@@ -271,7 +253,7 @@ export const creators: Creator[] = [
     videoFile: 'AADRIKA.mp4'
   },
   {
-    id: 27,
+    id: 25,
     name: 'Ipshita Mahajan',
     handle: '@ipshita_07__',
     followers: '638',
@@ -281,7 +263,7 @@ export const creators: Creator[] = [
     videoFile: 'IPSHITA MAHAJAN.mp4'
   },
   {
-    id: 28,
+    id: 26,
     name: 'Akanksha Singh',
     handle: '@akanksha.x',
     followers: '6.9K',
@@ -291,7 +273,7 @@ export const creators: Creator[] = [
     videoFile: 'AAKANSHA.mp4'
   },
   {
-    id: 29,
+    id: 27,
     name: 'Astha Ajmera',
     handle: '@allabout.astha',
     followers: '1.28K',
@@ -301,7 +283,7 @@ export const creators: Creator[] = [
     videoFile: 'ASTHA.mp4'
   },
   {
-    id: 30,
+    id: 28,
     name: 'Mahi Gupta',
     handle: '@mahiig_23',
     followers: '964',
@@ -309,5 +291,25 @@ export const creators: Creator[] = [
     niches: ['Fashion', 'Beauty', 'Home', 'Travel', 'UGC Ads', 'Lifestyle'],
     brandCollabs: 0,
     videoFile: 'mahi.mp4'
+  },
+  {
+    id: 29,
+    name: 'Sehajpreet Kaur',
+    handle: '@sehajpreet_126',
+    followers: '4.1K',
+    avgViews: '85K',
+    niches: ['Lifestyle', 'Campus'],
+    brandCollabs: 11,
+    videoFile: 'sehajpreet.MOV'
+  },
+  {
+    id: 30,
+    name: 'Khushi',
+    handle: '@hasikhushie',
+    followers: '8.75K',
+    avgViews: '45K',
+    niches: ['UGC Ads', 'Beauty', 'Lifestyle'],
+    brandCollabs: 0,
+    videoFile: 'KHUSHI.mp4'
   }
 ];
