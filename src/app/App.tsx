@@ -174,7 +174,23 @@ export default function App() {
     let uploadedFilename = '';
 
     if (videoUrl) {
-      uploadedFilename = videoUrl;
+      try {
+        const res = await fetch('/api/download-reel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: videoUrl }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          uploadedFilename = data.filename;
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (err: any) {
+        triggerStatus('error', `Reel download failed: ${err.message}`);
+        setUploadingVideo(false);
+        return;
+      }
     } else if (videoFile) {
       try {
         const res = await fetch('/api/upload-video', {

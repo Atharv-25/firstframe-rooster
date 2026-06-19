@@ -57,6 +57,62 @@ function apiPlugin() {
           return;
         }
 
+        if (req.url === '/api/download-reel' && req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => { body += chunk; });
+          req.on('end', () => {
+            try {
+              const { url } = JSON.parse(body);
+              if (!url) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Missing Instagram URL' }));
+                return;
+              }
+              const scriptPath = path.resolve(__dirname, 'scripts/download_reel.py');
+              const pyProcess = spawn('python3', [scriptPath, url]);
+              let stdoutData = '';
+              let stderrData = '';
+              
+              pyProcess.stdout.on('data', data => { stdoutData += data; });
+              pyProcess.stderr.on('data', data => { stderrData += data; });
+              
+              pyProcess.on('error', err => {
+                console.error('Failed to spawn download_reel.py:', err);
+                if (!res.writableEnded) {
+                  res.writeHead(500, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ error: `Spawn error: ${err.message}` }));
+                }
+              });
+              
+              pyProcess.on('close', code => {
+                if (res.writableEnded) return;
+                if (code === 0) {
+                  try {
+                    const result = JSON.parse(stdoutData.trim());
+                    if (result.success) {
+                      res.writeHead(200, { 'Content-Type': 'application/json' });
+                      res.end(JSON.stringify({ success: true, filename: result.filename }));
+                    } else {
+                      res.writeHead(500, { 'Content-Type': 'application/json' });
+                      res.end(JSON.stringify({ error: result.error || 'Failed to download Reel' }));
+                    }
+                  } catch (e) {
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: `Parse error: ${stdoutData.trim()}` }));
+                  }
+                } else {
+                  res.writeHead(500, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ error: stderrData.trim() || 'Python script failed' }));
+                }
+              });
+            } catch (err) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+          return;
+        }
+
         if (req.url === '/api/add-to-campaign' && req.method === 'POST') {
           let body = '';
           req.on('data', chunk => { body += chunk; });
