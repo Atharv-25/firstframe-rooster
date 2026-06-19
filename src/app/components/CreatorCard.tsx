@@ -27,6 +27,7 @@ export function CreatorCard({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(true);
+  const [videoLoaded, setVideoLoaded] = useState(false);
 
   const handleMouseEnter = () => {
     if (videoRef.current) {
@@ -72,7 +73,22 @@ export function CreatorCard({
       >
         {creator.videoFile ? (
           <>
-            <video ref={videoRef} preload="metadata" loop playsInline muted>
+            {/* Loading spinner — shown until first frame is ready */}
+            {!videoLoaded && (
+              <div className="creator-card__loader">
+                <div className="creator-card__spinner"></div>
+              </div>
+            )}
+
+            <video
+              ref={videoRef}
+              preload="metadata"
+              loop
+              playsInline
+              muted
+              style={{ opacity: videoLoaded ? 1 : 0, transition: 'opacity 0.3s ease' }}
+              onLoadedData={() => setVideoLoaded(true)}
+            >
               <source
                 src={`${GITHUB_VIDEO_BASE}/${creator.videoFile}`}
                 type={creator.videoFile.toLowerCase().endsWith('.mov') ? 'video/quicktime' : 'video/mp4'}
@@ -82,13 +98,15 @@ export function CreatorCard({
             </video>
 
             {/* Play overlay */}
-            <div className={`creator-card__play-overlay${playing ? ' hidden' : ''}`}>
-              <div className="creator-card__play-btn">
-                <svg width="14" height="16" viewBox="0 0 14 16" fill="none">
-                  <path d="M1 1L13 8L1 15V1Z" fill="#111111"/>
-                </svg>
+            {videoLoaded && (
+              <div className={`creator-card__play-overlay${playing ? ' hidden' : ''}`}>
+                <div className="creator-card__play-btn">
+                  <svg width="14" height="16" viewBox="0 0 14 16" fill="none">
+                    <path d="M1 1L13 8L1 15V1Z" fill="#111111"/>
+                  </svg>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Mute toggle — only visible when playing */}
             {playing && (

@@ -157,6 +157,30 @@
   display: block;
 }
 
+/* Loading spinner — shown while video buffers */
+.creator-card__loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a1a;
+  z-index: 2;
+}
+
+.creator-card__spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Play overlay — shown when not playing (mobile tap UX) */
 .creator-card__play-overlay {
   position: absolute;
