@@ -80,6 +80,15 @@ export function CreatorCard({
   const instagramId = isInstagram ? getInstagramId(creator.videoFile) : '';
   const instagramCoverUrl = instagramId ? `https://www.instagram.com/p/${instagramId}/media/?size=l` : '';
 
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const videoSrc = creator.videoFile
+    ? (creator.videoFile.startsWith('http')
+        ? creator.videoFile
+        : (isLocalhost
+            ? `/videos/${creator.videoFile}`
+            : `${GITHUB_VIDEO_BASE}/${creator.videoFile}`))
+    : '';
+
   return (
     <div className={`creator-card ${isAddedToCampaign ? 'creator-card--selected' : ''}`}>
       <motion.div
@@ -116,13 +125,13 @@ export function CreatorCard({
                 onLoadedData={() => setVideoLoaded(true)}
               >
                 <source
-                  src={creator.videoFile.startsWith('http') ? creator.videoFile : `${GITHUB_VIDEO_BASE}/${creator.videoFile}`}
+                  src={videoSrc}
                   type={creator.videoFile.toLowerCase().endsWith('.mov') ? 'video/quicktime' : 'video/mp4'}
                 />
                 {!creator.videoFile.startsWith('http') && (
                   <>
-                    <source src={`${GITHUB_VIDEO_BASE}/${creator.videoFile}`} type="video/mp4" />
                     <source src={`/videos/${creator.videoFile}`} type="video/mp4" />
+                    <source src={`${GITHUB_VIDEO_BASE}/${creator.videoFile}`} type="video/mp4" />
                   </>
                 )}
               </video>

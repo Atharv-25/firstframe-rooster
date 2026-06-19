@@ -15,6 +15,7 @@ export default function App() {
   // Lightbox player state
   const [activeVideoCreator, setActiveVideoCreator] = useState<Creator | null>(null);
   const [lightboxMuted, setLightboxMuted] = useState(false);
+  const [lightboxSrc, setLightboxSrc] = useState('');
 
   // New Creator Form State
   const [newName, setNewName] = useState('');
@@ -37,6 +38,20 @@ export default function App() {
     window.addEventListener('popstate', handleLocationChange);
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, []);
+
+  // Update lightboxSrc when activeVideoCreator changes
+  useEffect(() => {
+    if (activeVideoCreator) {
+      const initialSrc = activeVideoCreator.videoFile.startsWith('http')
+        ? activeVideoCreator.videoFile
+        : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? `/videos/${activeVideoCreator.videoFile}`
+            : `${GITHUB_VIDEO_BASE}/${activeVideoCreator.videoFile}`);
+      setLightboxSrc(initialSrc);
+    } else {
+      setLightboxSrc('');
+    }
+  }, [activeVideoCreator]);
 
   // Load campaign list from localStorage
   useEffect(() => {
@@ -433,7 +448,7 @@ export default function App() {
                   ) : (
                     <video
                       key={activeVideoCreator.id}
-                      src={activeVideoCreator.videoFile.startsWith('http') ? activeVideoCreator.videoFile : `${GITHUB_VIDEO_BASE}/${activeVideoCreator.videoFile}`}
+                      src={lightboxSrc}
                       autoPlay
                       loop
                       playsInline
@@ -442,6 +457,13 @@ export default function App() {
                       ref={(el) => {
                         if (el) {
                           el.play().catch(() => {});
+                        }
+                      }}
+                      onError={() => {
+                        // Fall back to GitHub LFS CDN if local file fails (e.g. if it is a 132-byte git LFS pointer)
+                        if (lightboxSrc && !lightboxSrc.startsWith('http') && !lightboxSrc.startsWith('https://media.githubusercontent')) {
+                          console.log('Local video failed, falling back to GitHub LFS CDN');
+                          setLightboxSrc(`${GITHUB_VIDEO_BASE}/${activeVideoCreator.videoFile}`);
                         }
                       }}
                     />
