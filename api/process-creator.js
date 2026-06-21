@@ -11,44 +11,63 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing profileUrl' });
     }
 
-    const apifyToken = process.env.VITE_APIFY_TOKEN;
-    const apifyActorId = process.env.VITE_APIFY_ACTOR_ID || 'potent_sarod~instagram-supabase-pipeline';
+    const rapidApiKey = process.env.VITE_RAPID_API_KEY;
     const supabaseUrl = process.env.VITE_SUPABASE_URL;
     const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
     
-    if (!apifyToken || !supabaseUrl || !supabaseKey) {
-      return res.status(500).json({ error: 'Missing Apify or Supabase credentials in environment' });
+    if (!rapidApiKey || !supabaseUrl || !supabaseKey) {
+      return res.status(500).json({ error: 'Missing RapidAPI or Supabase credentials in environment' });
     }
 
-    const targetUrl = reelUrl && reelUrl.trim() !== '' ? reelUrl : profileUrl;
-    
-    const payload = JSON.stringify({
-      profileUrls: [targetUrl],
-      scrapeReels: true,
-      scrapeImages: false,
-      supabaseUrl: supabaseUrl,
-      supabaseKey: supabaseKey
-    });
-
-    // Call Apify API synchronously (waitForFinish=120)
-    console.log('Triggering Apify...');
-    const apifyRes = await fetch(`https://api.apify.com/v2/acts/${apifyActorId}/runs?token=${apifyToken}&waitForFinish=120`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: payload
-    });
-
-    if (!apifyRes.ok) {
-      const errText = await apifyRes.text();
-      return res.status(500).json({ error: `Apify failed: ${errText}` });
-    }
-
-    console.log('Apify finished. Syncing database with Supabase Storage bucket...');
-    
     // Connect to Supabase
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    let targetUrl = reelUrl && reelUrl.trim() !== '' ? reelUrl.trim() : profileUrl.trim();
+    
+    if (targetUrl && targetUrl.includes('instagram.com/reel/')) {
+      console.log(`Fetching reel from RapidAPI: ${targetUrl}`);
+      try {
+        const rapidRes = await fetch(`https://instagram-reels-downloader-api.p.rapidapi.com/download?url=${encodeURIComponent(targetUrl)}`, {
+          headers: {
+            'x-rapidapi-key': rapidApiKey,
+            'x-rapidapi-host': 'instagram-reels-downloader-api.p.rapidapi.com'
+          }
+        });
+        const rapidJson = await rapidRes.json();
+        
+        if (rapidJson.success && rapidJson.data && rapidJson.data.medias && rapidJson.data.medias.length > 0) {
+          const videoUrl = rapidJson.data.medias[0].url;
+          const coverUrl = rapidJson.data.thumbnail;
+          const shortcode = rapidJson.data.shortcode;
+          
+          let username = 'creator';
+          try {
+            username = profileUrl.split('instagram.com/')[1].split('/')[0].split('?')[0];
+          } catch(e) {}
+          
+          const fullName = rapidJson.data.author || username;
+          
+          // Insert raw Instagram link into Postgres. The downstream logic will instantly auto-migrate it to Cloudinary!
+          await supabase.from('instagram_creators').insert({
+            instagram_username: username,
+            full_name: fullName,
+            post_id: shortcode,
+            post_url: targetUrl,
+            post_type: 'Video',
+            original_video_url: videoUrl,
+            original_image_url: coverUrl,
+            scraped_at: new Date().toISOString()
+          });
+          console.log('Successfully scraped from RapidAPI and inserted into DB!');
+        } else {
+          console.error('RapidAPI returned unexpected data:', rapidJson);
+        }
+      } catch (err) {
+        console.error('RapidAPI fetch failed:', err);
+      }
+    }
+
+    console.log('Syncing database with frontend creators.json...');
 
     // 1. Fetch raw scraped data from postgres
     const { data: dbRows, error: dbError } = await supabase
