@@ -368,8 +368,8 @@ function ExpandedView({ creator, inCampaign, onToggleCampaign, onClose, isAdminV
           {/* Sticky header */}
           <div className="expanded-header">
             <div className="expanded-header__info">
-              <h2 className="expanded-header__name">{creator.name}</h2>
-              {creator.handle && (
+              <h2 className="expanded-header__name">{isAdminView ? creator.name : creator.name.split(' ')[0]}</h2>
+              {isAdminView && creator.handle && (
                 <a
                   href={creator.profileUrl || `https://instagram.com/${creator.handle}`}
                   target="_blank"
@@ -427,7 +427,7 @@ function ExpandedView({ creator, inCampaign, onToggleCampaign, onClose, isAdminV
           )}
 
           {/* Sticky footer */}
-          {!isAdminView && (
+          {true && (
             <div className="expanded-footer">
               <button
                 type="button"
@@ -541,7 +541,7 @@ export const CreatorCard = memo(function CreatorCard({
         {/* Info section */}
         <div className="cc__info">
           <div className="cc__name-row">
-            <span className="cc__name">{creator.name}</span>
+            <span className="cc__name">{isAdminView ? creator.name : creator.name.split(' ')[0]}</span>
             {isAdminView && creator.handle && <span className="cc__handle">@{creator.handle}</span>}
           </div>
           <div className="cc__stats-line">
@@ -549,22 +549,17 @@ export const CreatorCard = memo(function CreatorCard({
           </div>
           {creator.niches && creator.niches.length > 0 && (
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
-              {creator.niches.slice(0, 3).map((niche) => (
+              {creator.niches.map((niche) => (
                 <span key={niche} style={{ background: '#f5f5f5', color: '#555', fontSize: '10px', padding: '4px 8px', borderRadius: '12px', fontWeight: 600, letterSpacing: '0.2px' }}>
                   {niche}
                 </span>
               ))}
-              {creator.niches.length > 3 && (
-                <span style={{ background: '#f5f5f5', color: '#555', fontSize: '10px', padding: '4px 8px', borderRadius: '12px', fontWeight: 600, letterSpacing: '0.2px' }}>
-                  +{creator.niches.length - 3}
-                </span>
-              )}
             </div>
           )}
         </div>
 
         {/* CTA button */}
-        {!isAdminView && (
+        {true && (
           <div className="cc__cta" onClick={(e) => e.stopPropagation()}>
             <button
               type="button"

@@ -28,25 +28,32 @@ export default async function handler(req, res) {
     if (targetUrl && (targetUrl.includes('instagram.com/reel/') || targetUrl.includes('instagram.com/p/'))) {
       console.log(`Fetching reel from RapidAPI: ${targetUrl}`);
       try {
-        const rapidRes = await fetch(`https://instagram-reels-downloader-api.p.rapidapi.com/download?url=${encodeURIComponent(targetUrl)}`, {
+        const rapidRes = await fetch(`https://instagram-downloader-download-instagram-stories-videos4.p.rapidapi.com/convert?url=${encodeURIComponent(targetUrl)}`, {
           headers: {
             'x-rapidapi-key': rapidApiKey,
-            'x-rapidapi-host': 'instagram-reels-downloader-api.p.rapidapi.com'
+            'x-rapidapi-host': 'instagram-downloader-download-instagram-stories-videos4.p.rapidapi.com'
           }
         });
         const rapidJson = await rapidRes.json();
         
-        if (rapidJson.success && rapidJson.data && rapidJson.data.medias && rapidJson.data.medias.length > 0) {
-          const videoUrl = rapidJson.data.medias[0].url;
-          const coverUrl = rapidJson.data.thumbnail;
-          const shortcode = rapidJson.data.shortcode;
+        if (rapidJson.media && rapidJson.media.length > 0) {
+          const videoObj = rapidJson.media.find(m => m.type === 'video') || rapidJson.media[0];
+          const videoUrl = videoObj.url;
+          const coverUrl = videoObj.thumbnail || videoObj.url;
+          
+          let shortcode = 'unknown';
+          try {
+            const parts = targetUrl.split('/');
+            shortcode = parts.includes('reel') ? parts[parts.indexOf('reel')+1] : parts.includes('p') ? parts[parts.indexOf('p')+1] : Date.now().toString();
+            shortcode = shortcode.split('?')[0];
+          } catch(e) {}
           
           let username = 'creator';
           try {
             username = profileUrl.split('instagram.com/')[1].split('/')[0].split('?')[0];
           } catch(e) {}
           
-          const fullName = rapidJson.data.author || username;
+          const fullName = username;
           
           // Insert raw Instagram link into Postgres. The downstream logic will instantly auto-migrate it to Cloudinary!
           await supabase.from('instagram_creators').insert({
