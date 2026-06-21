@@ -122,27 +122,71 @@ function ReelPlayer({ reel, autoPlay = false, previewMode = false }: ReelPlayerP
   const primarySrc = resolveVideoSrc(reel.videoUrl);
   const src = fallbackSrc || primarySrc;
 
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+    } else {
+      video.pause();
+      setIsPlaying(false);
+    }
+  };
+
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+    <div 
+      style={{ width: '100%', height: '100%', position: 'relative', cursor: 'pointer' }}
+      onClick={togglePlay}
+    >
+      <style>{`
+        video::-webkit-media-controls-start-playback-button {
+          display: none !important;
+          -webkit-appearance: none;
+        }
+      `}</style>
       <video
         ref={videoRef}
         key={src}
         src={src}
-        controls={!previewMode}
+        controls={false}
         defaultMuted={previewMode ? true : undefined}
         muted={previewMode ? isMuted : undefined}
         loop
         playsInline
         preload="auto"
         poster={reel.thumbnailUrl || (reel as any).coverUrl}
-        autoPlay={autoPlay}
-        style={{ width: '100%', height: '100%', objectFit: 'cover', background: '#000' }}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', background: '#000', pointerEvents: 'none' }}
         onError={() => {
           if (!fallbackSrc && !reel.videoUrl.startsWith('http')) {
             setFallbackSrc(`${GITHUB_VIDEO_BASE}/${reel.videoUrl}`);
           }
         }}
       />
+      {!isPlaying && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'rgba(0,0,0,0.5)',
+          borderRadius: '50%',
+          width: '48px',
+          height: '48px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          pointerEvents: 'none',
+          zIndex: 10
+        }}>
+          <Play size={24} fill="white" style={{ marginLeft: '4px' }} />
+        </div>
+      )}
       {previewMode && (
         <button
           type="button"
