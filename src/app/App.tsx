@@ -158,20 +158,20 @@ export default function App() {
   };
 
   const handleToggleCampaign = (creator: Creator) => {
-    const exists = campaignList.some((c) => c.id === creator.id);
-    let updated: Creator[];
+    setCampaignList((prevList) => {
+      const exists = prevList.some((c) => c.id === creator.id);
+      let updated: Creator[];
 
-    if (exists) {
-      updated = campaignList.filter((c) => c.id !== creator.id);
-      setCampaignList(updated);
+      if (exists) {
+        updated = prevList.filter((c) => c.id !== creator.id);
+        setTimeout(() => triggerStatus('success', `Removed ${creator.name.split(' ')[0]} from Campaign shortlist.`), 0);
+      } else {
+        updated = [...prevList, creator];
+        setTimeout(() => triggerStatus('success', `Added ${creator.name.split(' ')[0]} to Campaign shortlist.`), 0);
+      }
       localStorage.setItem('campaignList', JSON.stringify(updated));
-      triggerStatus('success', `Removed ${creator.name.split(' ')[0]} from Campaign shortlist.`);
-    } else {
-      updated = [...campaignList, creator];
-      setCampaignList(updated);
-      localStorage.setItem('campaignList', JSON.stringify(updated));
-      triggerStatus('success', `Added ${creator.name.split(' ')[0]} to Campaign shortlist.`);
-    }
+      return updated;
+    });
   };
 
   const handleSubmitCampaign = async () => {

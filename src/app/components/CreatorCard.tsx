@@ -385,21 +385,14 @@ export const CreatorCard = memo(function CreatorCard({
   onEdit
 }: CreatorCardProps) {
   const creator = normalizeCreator(rawCreator);
-  const [expanded, setExpanded] = useState(false);
   const firstReel = creator.reels?.[0];
 
   const [followersStr, setFollowersStr] = useState(() => localStorage.getItem(`creator_followers_${creator.id}`) || creator.followers);
   const [viewsStr, setViewsStr] = useState(() => localStorage.getItem(`creator_views_${creator.id}`) || creator.avgViews);
 
-  const handleCardClick = () => {
-    setExpanded(true);
-  };
-
   return (
-    <>
       <div
         className={`cc ${inCampaign ? 'cc--selected' : ''}`}
-        onClick={handleCardClick}
       >
         {/* Thumbnail area */}
         <div className="cc__thumb">
@@ -460,6 +453,20 @@ export const CreatorCard = memo(function CreatorCard({
           <div className="cc__stats-line">
             <span>{followersStr} followers</span>
           </div>
+          {creator.niches && creator.niches.length > 0 && (
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
+              {creator.niches.slice(0, 3).map((niche) => (
+                <span key={niche} style={{ background: '#f5f5f5', color: '#555', fontSize: '10px', padding: '4px 8px', borderRadius: '12px', fontWeight: 600, letterSpacing: '0.2px' }}>
+                  {niche}
+                </span>
+              ))}
+              {creator.niches.length > 3 && (
+                <span style={{ background: '#f5f5f5', color: '#555', fontSize: '10px', padding: '4px 8px', borderRadius: '12px', fontWeight: 600, letterSpacing: '0.2px' }}>
+                  +{creator.niches.length - 3}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* CTA button */}
@@ -485,28 +492,12 @@ export const CreatorCard = memo(function CreatorCard({
           </div>
         )}
       </div>
-
-      {/* Expanded view portal */}
-      <AnimatePresence>
-        {expanded && (
-          <ExpandedView
-            creator={creator}
-            inCampaign={inCampaign}
-            onToggleCampaign={() => onToggleCampaign(creator)}
-            onClose={() => setExpanded(false)}
-            isAdminView={isAdminView}
-            followersStr={followersStr}
-            viewsStr={viewsStr}
-            setFollowersStr={setFollowersStr}
-            setViewsStr={setViewsStr}
-          />
-        )}
-      </AnimatePresence>
-    </>
   );
 }, (prev, next) => {
   return prev.creator.id === next.creator.id && 
          prev.inCampaign === next.inCampaign && 
          prev.isAdminView === next.isAdminView &&
-         prev.creator.name === next.creator.name;
+         prev.onUpdateName === next.onUpdateName &&
+         prev.onDelete === next.onDelete &&
+         prev.onEdit === next.onEdit;
 });
