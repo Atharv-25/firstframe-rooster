@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { v2 as cloudinary } from 'cloudinary';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -24,7 +25,7 @@ export default async function handler(req, res) {
 
     let targetUrl = reelUrl && reelUrl.trim() !== '' ? reelUrl.trim() : profileUrl.trim();
     
-    if (targetUrl && targetUrl.includes('instagram.com/reel/')) {
+    if (targetUrl && (targetUrl.includes('instagram.com/reel/') || targetUrl.includes('instagram.com/p/'))) {
       console.log(`Fetching reel from RapidAPI: ${targetUrl}`);
       try {
         const rapidRes = await fetch(`https://instagram-reels-downloader-api.p.rapidapi.com/download?url=${encodeURIComponent(targetUrl)}`, {
@@ -110,8 +111,6 @@ export default async function handler(req, res) {
       if (process.env.VITE_CLOUDINARY_URL && bestVideoUrl && bestVideoUrl.includes('.fbcdn.net') && !bestVideoUrl.includes('res.cloudinary.com')) {
         try {
           console.log(`Uploading to Cloudinary for ${username}...`);
-          const cloudinary = require('cloudinary').v2;
-          // Ensure no trailing spaces from env file
           const cloudUrl = process.env.VITE_CLOUDINARY_URL.trim();
           cloudinary.config({ cloudinary_url: cloudUrl });
           
