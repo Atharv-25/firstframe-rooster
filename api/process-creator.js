@@ -84,8 +84,34 @@ export default async function handler(req, res) {
         };
       }
       
-      // Prioritize Supabase permanent storage over temporary Instagram CDN to prevent expiring links
-      const bestVideoUrl = row.storage_public_url || row.original_video_url || row.post_url;
+      // Prioritize Supabase/Cloudinary permanent storage over temporary Instagram CDN to prevent expiring links
+      let bestVideoUrl = row.storage_public_url || row.original_video_url || row.post_url;
+      
+      // Auto-migrate expiring Instagram links to Cloudinary if available
+      if (process.env.VITE_CLOUDINARY_URL && bestVideoUrl && bestVideoUrl.includes('.fbcdn.net') && !bestVideoUrl.includes('res.cloudinary.com')) {
+        try {
+          console.log(`Uploading to Cloudinary for ${username}...`);
+          const cloudinary = require('cloudinary').v2;
+          // Ensure no trailing spaces from env file
+          const cloudUrl = process.env.VITE_CLOUDINARY_URL.trim();
+          cloudinary.config({ cloudinary_url: cloudUrl });
+          
+          const uploadRes = await cloudinary.uploader.upload(bestVideoUrl, {
+            resource_type: 'video',
+            folder: 'firstframe-creators'
+          });
+          
+          bestVideoUrl = uploadRes.secure_url;
+          console.log(`Successfully migrated to Cloudinary: ${bestVideoUrl}`);
+          
+          // Save back to Supabase so we don't upload it again next time
+          await supabase.from('instagram_creators').update({ storage_public_url: bestVideoUrl }).eq('id', row.id);
+        } catch (err) {
+          console.error(`Failed to upload to Cloudinary for ${username}:`, err);
+          // It will fallback to the original fbcdn.net link if it fails
+        }
+      }
+
       if (bestVideoUrl) {
         grouped[username].reels.push({
           id: `reel_${row.post_id || row.id}`,
