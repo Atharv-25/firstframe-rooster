@@ -1,4 +1,4 @@
-import { useState, memo } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import { Creator, Reel } from '../data/creators';
 import { Plus, Check, X, Play, Volume2, VolumeX } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -62,6 +62,25 @@ interface ReelPlayerProps {
 function ReelPlayer({ reel, autoPlay = false, previewMode = false }: ReelPlayerProps) {
   const [fallbackSrc, setFallbackSrc] = useState('');
   const [isMuted, setIsMuted] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) {
+      video.defaultMuted = true;
+      if (previewMode) {
+        video.muted = isMuted;
+      }
+      if (autoPlay) {
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.log('Autoplay prevented:', err);
+          });
+        }
+      }
+    }
+  }, [autoPlay, isMuted, previewMode, reel.videoUrl]);
 
   if (isInstagramUrl(reel.videoUrl)) {
     return (
@@ -103,23 +122,71 @@ function ReelPlayer({ reel, autoPlay = false, previewMode = false }: ReelPlayerP
   const primarySrc = resolveVideoSrc(reel.videoUrl);
   const src = fallbackSrc || primarySrc;
 
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+    } else {
+      video.pause();
+      setIsPlaying(false);
+    }
+  };
+
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+    <div 
+      style={{ width: '100%', height: '100%', position: 'relative', cursor: 'pointer' }}
+      onClick={togglePlay}
+    >
+      <style>{`
+        video::-webkit-media-controls-start-playback-button {
+          display: none !important;
+          -webkit-appearance: none;
+        }
+      `}</style>
       <video
+        ref={videoRef}
         key={src}
         src={src}
-        controls={!previewMode}
+        controls={false}
+        defaultMuted={previewMode ? true : undefined}
         muted={previewMode ? isMuted : undefined}
         loop
         playsInline
-        autoPlay={autoPlay}
-        style={{ width: '100%', height: '100%', objectFit: 'cover', background: '#000' }}
+        preload="auto"
+        poster={reel.thumbnailUrl || (reel as any).coverUrl}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', background: '#000', pointerEvents: 'none' }}
         onError={() => {
           if (!fallbackSrc && !reel.videoUrl.startsWith('http')) {
             setFallbackSrc(`${GITHUB_VIDEO_BASE}/${reel.videoUrl}`);
           }
         }}
       />
+      {!isPlaying && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'rgba(0,0,0,0.5)',
+          borderRadius: '50%',
+          width: '48px',
+          height: '48px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          pointerEvents: 'none',
+          zIndex: 10
+        }}>
+          <Play size={24} fill="white" style={{ marginLeft: '4px' }} />
+        </div>
+      )}
       {previewMode && (
         <button
           type="button"
@@ -362,26 +429,19 @@ export const CreatorCard = memo(function CreatorCard({
   onEdit
 }: CreatorCardProps) {
   const creator = normalizeCreator(rawCreator);
-  const [expanded, setExpanded] = useState(false);
   const firstReel = creator.reels?.[0];
 
   const [followersStr, setFollowersStr] = useState(() => localStorage.getItem(`creator_followers_${creator.id}`) || creator.followers);
   const [viewsStr, setViewsStr] = useState(() => localStorage.getItem(`creator_views_${creator.id}`) || creator.avgViews);
 
-  const handleCardClick = () => {
-    setExpanded(true);
-  };
-
   return (
-    <>
       <div
         className={`cc ${inCampaign ? 'cc--selected' : ''}`}
-        onClick={handleCardClick}
       >
         {/* Thumbnail area */}
         <div className="cc__thumb">
           {firstReel?.videoUrl ? (
-            <div className="cc__preview-wrapper" style={{ width: '100%', height: '100%' }}>
+            <div className="cc__preview-wrapper" style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }}>
               <ReelPlayer reel={firstReel} autoPlay={true} previewMode={true} />
             </div>
           ) : firstReel?.thumbnailUrl ? (
@@ -437,6 +497,20 @@ export const CreatorCard = memo(function CreatorCard({
           <div className="cc__stats-line">
             <span>{followersStr} followers</span>
           </div>
+          {creator.niches && creator.niches.length > 0 && (
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
+              {creator.niches.slice(0, 3).map((niche) => (
+                <span key={niche} style={{ background: '#f5f5f5', color: '#555', fontSize: '10px', padding: '4px 8px', borderRadius: '12px', fontWeight: 600, letterSpacing: '0.2px' }}>
+                  {niche}
+                </span>
+              ))}
+              {creator.niches.length > 3 && (
+                <span style={{ background: '#f5f5f5', color: '#555', fontSize: '10px', padding: '4px 8px', borderRadius: '12px', fontWeight: 600, letterSpacing: '0.2px' }}>
+                  +{creator.niches.length - 3}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* CTA button */}
@@ -462,28 +536,12 @@ export const CreatorCard = memo(function CreatorCard({
           </div>
         )}
       </div>
-
-      {/* Expanded view portal */}
-      <AnimatePresence>
-        {expanded && (
-          <ExpandedView
-            creator={creator}
-            inCampaign={inCampaign}
-            onToggleCampaign={() => onToggleCampaign(creator)}
-            onClose={() => setExpanded(false)}
-            isAdminView={isAdminView}
-            followersStr={followersStr}
-            viewsStr={viewsStr}
-            setFollowersStr={setFollowersStr}
-            setViewsStr={setViewsStr}
-          />
-        )}
-      </AnimatePresence>
-    </>
   );
 }, (prev, next) => {
   return prev.creator.id === next.creator.id && 
          prev.inCampaign === next.inCampaign && 
          prev.isAdminView === next.isAdminView &&
-         prev.creator.name === next.creator.name;
+         prev.onUpdateName === next.onUpdateName &&
+         prev.onDelete === next.onDelete &&
+         prev.onEdit === next.onEdit;
 });

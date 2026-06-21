@@ -15,53 +15,6 @@ function apiPlugin() {
     name: 'vite-api-endpoints',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
-        if (req.url === '/api/save-creators' && req.method === 'POST') {
-          let body = '';
-          req.on('data', chunk => { body += chunk; });
-          req.on('end', () => {
-            try {
-              const creatorsPath = path.resolve(__dirname, 'src/app/data/creators.json');
-              fs.writeFileSync(creatorsPath, body, 'utf8');
-              res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ success: true }));
-            } catch (err) {
-              res.writeHead(500, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ error: err.message }));
-            }
-          });
-          return;
-        }
-
-        if (req.url === '/api/upload-video' && req.method === 'POST') {
-          const filename = req.headers['x-filename'] as string;
-          if (!filename) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Missing X-Filename header' }));
-            return;
-          }
-          try {
-            const dirPath = path.resolve(__dirname, 'public/videos');
-            if (!fs.existsSync(dirPath)) {
-              fs.mkdirSync(dirPath, { recursive: true });
-            }
-            const filePath = path.resolve(dirPath, filename);
-            const writeStream = fs.createWriteStream(filePath);
-            req.pipe(writeStream);
-            req.on('end', () => {
-              res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ success: true, filename }));
-            });
-            req.on('error', (err) => {
-              res.writeHead(500, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ error: err.message }));
-            });
-          } catch (err) {
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: err.message }));
-          }
-          return;
-        }
-
         // --- RAPIDAPI QUICK FETCH FOR "FETCH DETAILS" BUTTON ---
         if (req.url === '/api/fetch-profile' && req.method === 'POST') {
           let body = '';
@@ -74,7 +27,45 @@ function apiPlugin() {
                 res.writeHead(400, { 'Content-Type': 'application/json' });
                 return res.end(JSON.stringify({ success: false, error: 'Invalid URL' }));
               }
-              const fetchRes = await fetch(profileUrl);
+              
+              let absoluteUrl = profileUrl;
+              if (!/^https?:\/\//i.test(absoluteUrl)) {
+                absoluteUrl = 'https://' + absoluteUrl;
+              }
+              
+              const username = handleMatch[1];
+              const apifyToken = process.env.VITE_APIFY_TOKEN;
+
+              if (apifyToken) {
+                const apifyUrl = `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token=${apifyToken}`;
+                
+                const apifyRes = await fetch(apifyUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ usernames: [username] })
+                });
+                
+                if (apifyRes.ok) {
+                  const data = await apifyRes.json();
+                  if (data && data.length > 0) {
+                    const profile = data[0];
+                    
+                    let followersStr = profile.followersCount;
+                    if (followersStr >= 1000000) followersStr = (followersStr / 1000000).toFixed(1) + 'M';
+                    else if (followersStr >= 1000) followersStr = (followersStr / 1000).toFixed(1) + 'K';
+                    else followersStr = followersStr.toString();
+                    
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    return res.end(JSON.stringify({ success: true, name: profile.fullName || username, followers: followersStr }));
+                  }
+                }
+              }
+
+              if (!/^https?:\/\//i.test(absoluteUrl)) {
+                absoluteUrl = 'https://' + absoluteUrl;
+              }
+              
+              const fetchRes = await fetch(absoluteUrl);
               const html = await fetchRes.text();
               
               const descMatch = html.match(/<meta property="og:description" content="([^"]+)"/);
@@ -90,12 +81,10 @@ function apiPlugin() {
                 let followersStr = fMatch ? fMatch[1] : '';
                 let nameStr = nMatch ? nMatch[1].trim() : 'Unknown';
                 
-                // Decode HTML entities
                 nameStr = nameStr.replace(/&#(x)?([a-zA-Z0-9]+);/g, (match, isHex, val) => {
                   return String.fromCodePoint(parseInt(val, isHex ? 16 : 10));
                 }).replace(/&amp;/g, '&');
                 
-                // Format numbers like 7,013 -> 7K
                 if (followersStr.includes(',')) {
                   const num = parseInt(followersStr.replace(/,/g, ''), 10);
                   if (num >= 1000000) followersStr = (num / 1000000).toFixed(1) + 'M';
@@ -103,13 +92,9 @@ function apiPlugin() {
                 }
                 
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                  success: true,
-                  name: nameStr,
-                  followers: followersStr
-                }));
+                res.end(JSON.stringify({ success: true, name: nameStr, followers: followersStr }));
               } else {
-                throw new Error('Could not parse Instagram profile. Is the account private?');
+                throw new Error('Instagram blocked the request. Please enter the Name and Followers manually.');
               }
             } catch (e: any) {
               res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -123,77 +108,32 @@ function apiPlugin() {
         if (req.url === '/api/process-creator' && req.method === 'POST') {
           let body = '';
           req.on('data', chunk => { body += chunk; });
-          req.on('end', () => {
+          req.on('end', async () => {
             try {
               const { profileUrl, reelUrl } = JSON.parse(body);
-              if (!profileUrl) {
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: 'Missing profileUrl' }));
-                return;
-              }
-
-              const apifyToken = process.env.VITE_APIFY_TOKEN;
-              const apifyActorId = 'potent_sarod~instagram-supabase-pipeline';
               
-              if (!apifyToken || !apifyActorId) {
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: 'Apify credentials missing in .env.local' }));
-                return;
-              }
-
-              // Read latest supabase credentials directly from file to bypass Vite cache
-              const envText = fs.readFileSync('.env.local', 'utf8');
-              const supaUrlMatch = envText.match(/^VITE_SUPABASE_URL=(.*)$/m);
-              const supaKeyMatch = envText.match(/^VITE_SUPABASE_ANON_KEY=(.*)$/m);
+              // Load the vercel handler dynamically
+              const { default: handler } = await import('./api/process-creator.js');
               
-              const targetUrl = reelUrl && reelUrl.trim() !== '' ? reelUrl : profileUrl;
-              
-              const payload = JSON.stringify({
-                profileUrls: [targetUrl],
-                scrapeReels: true,
-                scrapeImages: false,
-                supabaseUrl: supaUrlMatch ? supaUrlMatch[1].trim() : '',
-                supabaseKey: supaKeyMatch ? supaKeyMatch[1].trim() : ''
-              });
-
-              // Call Apify API synchronously (waitForFinish=120)
-              const options = {
-                hostname: 'api.apify.com',
-                port: 443,
-                path: `/v2/acts/${apifyActorId}/runs?token=${apifyToken}&waitForFinish=120`,
+              // Create mock req and res for the vercel handler
+              const mockReq = {
                 method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Content-Length': Buffer.byteLength(payload)
+                body: { profileUrl, reelUrl }
+              };
+              
+              const mockRes = {
+                status: function(code) {
+                  this.statusCode = code;
+                  return this;
+                },
+                json: function(data) {
+                  res.writeHead(this.statusCode || 200, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify(data));
+                  return this;
                 }
               };
-
-              const proxyReq = https.request(options, (proxyRes: any) => {
-                let proxyBody = '';
-                proxyRes.on('data', (chunk: any) => { proxyBody += chunk; });
-                proxyRes.on('end', () => {
-                  if (proxyRes.statusCode !== 201 && proxyRes.statusCode !== 200) {
-                     res.writeHead(500, { 'Content-Type': 'application/json' });
-                     res.end(JSON.stringify({ error: `Apify failed: ${proxyBody}` }));
-                     return;
-                  }
-                  
-                  // Now run the sync script
-                  const child = spawn('node', [path.join(__dirname, 'scripts/sync_supabase_creators.js')]);
-                  child.on('close', (code) => {
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ success: true, message: 'Actor finished and sync complete' }));
-                  });
-                });
-              });
-
-              proxyReq.on('error', (err: any) => {
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: `Apify request failed: ${err.message}` }));
-              });
-
-              proxyReq.write(payload);
-              proxyReq.end();
+              
+              await handler(mockReq, mockRes);
 
             } catch (err: any) {
               res.writeHead(500, { 'Content-Type': 'application/json' });

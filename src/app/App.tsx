@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
-import { creators as initialCreators, Creator, Reel } from './data/creators';
+import { Creator, Reel } from './data/creators';
 import { CreatorCard } from './components/CreatorCard';
 import { Plus, Check, AlertCircle, X, CheckSquare, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -46,9 +46,34 @@ export default function App() {
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, []);
 
-  // Initialize creators from local JSON
+  // Initialize creators from Supabase Storage bucket
   useEffect(() => {
-    setCreatorsList(initialCreators);
+    const loadCreators = async () => {
+      try {
+        // Use a timestamp to prevent browser caching of the JSON file
+        const timestamp = new Date().getTime();
+        const { data, error } = await supabase.storage
+          .from('creator-data')
+          .download(`creators.json?t=${timestamp}`);
+          
+        if (error) throw error;
+        const text = await data.text();
+        const parsed = JSON.parse(text);
+        
+        // Sort newest first based on numeric id timestamp
+        parsed.sort((a: Creator, b: Creator) => {
+          const idA = parseInt(a.id.split('_')[1] || '0');
+          const idB = parseInt(b.id.split('_')[1] || '0');
+          return idB - idA;
+        });
+        
+        setCreatorsList(parsed);
+      } catch (e) {
+        console.warn("Failed to load cloud creators", e);
+        triggerStatus('error', 'Failed to load creators from cloud storage.');
+      }
+    };
+    loadCreators();
   }, []);
 
   // Load campaign list from localStorage
@@ -116,33 +141,37 @@ export default function App() {
 
   const saveCreatorsToBackend = async (list: Creator[]) => {
     try {
-      const res = await fetch('/api/save-creators', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(list),
-      });
-      if (!res.ok) throw new Error('Failed to save to local file');
+      // Direct Supabase Storage upload using the client's service role key
+      const { error } = await supabase.storage
+        .from('creator-data')
+        .upload('creators.json', JSON.stringify(list, null, 2), {
+          contentType: 'application/json',
+          upsert: true,
+        });
+
+      if (error) throw error;
+      
     } catch (e: any) {
       console.error(e);
-      triggerStatus('error', `Failed to persist roster locally: ${e.message}`);
+      triggerStatus('error', `Failed to persist roster to cloud: ${e.message}`);
     }
   };
 
   const handleToggleCampaign = (creator: Creator) => {
-    const exists = campaignList.some((c) => c.id === creator.id);
-    let updated: Creator[];
+    setCampaignList((prevList) => {
+      const exists = prevList.some((c) => c.id === creator.id);
+      let updated: Creator[];
 
-    if (exists) {
-      updated = campaignList.filter((c) => c.id !== creator.id);
-      setCampaignList(updated);
+      if (exists) {
+        updated = prevList.filter((c) => c.id !== creator.id);
+        setTimeout(() => triggerStatus('success', `Removed ${creator.name.split(' ')[0]} from Campaign shortlist.`), 0);
+      } else {
+        updated = [...prevList, creator];
+        setTimeout(() => triggerStatus('success', `Added ${creator.name.split(' ')[0]} to Campaign shortlist.`), 0);
+      }
       localStorage.setItem('campaignList', JSON.stringify(updated));
-      triggerStatus('success', `Removed ${creator.name.split(' ')[0]} from Campaign shortlist.`);
-    } else {
-      updated = [...campaignList, creator];
-      setCampaignList(updated);
-      localStorage.setItem('campaignList', JSON.stringify(updated));
-      triggerStatus('success', `Added ${creator.name.split(' ')[0]} to Campaign shortlist.`);
-    }
+      return updated;
+    });
   };
 
   const handleSubmitCampaign = async () => {
@@ -219,6 +248,14 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ profileUrl: newProfileUrl.trim() })
       });
+
+      // Check if response is actually JSON
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        setModalError('Server returned an invalid response. Please try again or enter details manually.');
+        return;
+      }
+
       const data = await res.json();
       
       if (res.ok && data.success) {
