@@ -41,7 +41,10 @@ The system will run a complex cloud workflow entirely on its own:
 3. **Cloud Sync**: It merges all of this extracted data with the niches you selected, and saves it directly to your `creators.json` database hosted in your Supabase Cloud Bucket.
 4. **Live Update**: The app fetches the newly updated database from Supabase and instantly displays the new creator on the grid for all users globally.
 
----
+### What about the "Demo Reel URL" manual field?
+While the Apify background scraper will automatically download the creator's latest 3-5 reels and add them to the system, you can also **manually paste a specific video URL** into the "Demo Reel URL" input box if you want a specific video to be their primary showcase. 
+- You can paste a direct `.mp4` link, an Instagram reel link, or a YouTube Shorts link.
+- If you leave it blank, the system will just use the ones it scrapes automatically.
 
 ## 3. Editing Existing Creators
 

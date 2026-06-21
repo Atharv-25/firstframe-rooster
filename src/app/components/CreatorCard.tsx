@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, memo } from 'react';
 import { Creator, Reel } from '../data/creators';
-import { Plus, Check, X, Play, Volume2, VolumeX } from 'lucide-react';
+import { Plus, Check, X, Play, Volume2, VolumeX, Instagram } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const GITHUB_VIDEO_BASE = 'https://media.githubusercontent.com/media/Atharv-25/firstframe-rooster/main/public/videos';
@@ -66,37 +66,87 @@ function ReelPlayer({ reel, autoPlay = false, previewMode = false }: ReelPlayerP
 
   useEffect(() => {
     const video = videoRef.current;
-    if (video) {
-      video.defaultMuted = true;
-      if (previewMode) {
-        video.muted = isMuted;
-      }
-      if (autoPlay) {
-        const playPromise = video.play();
-        if (playPromise !== undefined) {
-          playPromise.catch((err) => {
-            console.log('Autoplay prevented:', err);
-          });
-        }
-      }
+    if (!video) return;
+
+    video.defaultMuted = true;
+    if (previewMode) {
+      video.muted = isMuted;
     }
+
+    if (!autoPlay) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+              playPromise.catch((err) => {
+                console.log('Autoplay prevented:', err);
+              });
+            }
+          } else {
+            video.pause();
+          }
+        });
+      },
+      { threshold: 0.2 } // Play when 20% visible
+    );
+
+    observer.observe(video);
+
+    return () => {
+      observer.disconnect();
+    };
   }, [autoPlay, isMuted, previewMode, reel.videoUrl]);
 
   if (isInstagramUrl(reel.videoUrl)) {
+    const coverSrc = reel.thumbnailUrl || (reel as any).coverUrl;
+    
     return (
-      <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-        {previewMode && (
-          <div style={{ position: 'absolute', inset: 0, zIndex: 10, cursor: 'pointer' }} />
-        )}
-        <iframe
-          src={getInstagramEmbedUrl(reel.videoUrl)}
-          title={reel.label}
-          frameBorder="0"
-          scrolling="no"
-          allowTransparency
-          allow="encrypted-media"
-          style={{ width: '100%', height: '100%', border: 'none', background: '#000', pointerEvents: previewMode ? 'none' : 'auto' }}
-        />
+      <div 
+        style={{ 
+          width: '100%', 
+          height: '100%', 
+          position: 'relative',
+          backgroundColor: '#111',
+          backgroundImage: coverSrc ? `url(${coverSrc})` : 'linear-gradient(to bottom, #222, #000)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          cursor: 'pointer'
+        }}
+        onClick={() => {
+          if (!previewMode) {
+            window.open(reel.videoUrl, '_blank');
+          }
+        }}
+      >
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundColor: 'rgba(0,0,0,0.4)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '12px'
+        }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            borderRadius: '50%',
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <Instagram color="white" size={24} />
+          </div>
+          <span style={{ color: 'white', fontSize: '14px', fontWeight: 500, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+            Watch on Instagram
+          </span>
+        </div>
       </div>
     );
   }
@@ -156,7 +206,7 @@ function ReelPlayer({ reel, autoPlay = false, previewMode = false }: ReelPlayerP
         muted={previewMode ? isMuted : undefined}
         loop
         playsInline
-        preload="auto"
+        preload="metadata"
         poster={reel.thumbnailUrl || (reel as any).coverUrl}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
