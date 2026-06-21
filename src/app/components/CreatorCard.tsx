@@ -66,20 +66,38 @@ function ReelPlayer({ reel, autoPlay = false, previewMode = false }: ReelPlayerP
 
   useEffect(() => {
     const video = videoRef.current;
-    if (video) {
-      video.defaultMuted = true;
-      if (previewMode) {
-        video.muted = isMuted;
-      }
-      if (autoPlay) {
-        const playPromise = video.play();
-        if (playPromise !== undefined) {
-          playPromise.catch((err) => {
-            console.log('Autoplay prevented:', err);
-          });
-        }
-      }
+    if (!video) return;
+
+    video.defaultMuted = true;
+    if (previewMode) {
+      video.muted = isMuted;
     }
+
+    if (!autoPlay) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+              playPromise.catch((err) => {
+                console.log('Autoplay prevented:', err);
+              });
+            }
+          } else {
+            video.pause();
+          }
+        });
+      },
+      { threshold: 0.2 } // Play when 20% visible
+    );
+
+    observer.observe(video);
+
+    return () => {
+      observer.disconnect();
+    };
   }, [autoPlay, isMuted, previewMode, reel.videoUrl]);
 
   if (isInstagramUrl(reel.videoUrl)) {
@@ -156,7 +174,7 @@ function ReelPlayer({ reel, autoPlay = false, previewMode = false }: ReelPlayerP
         muted={previewMode ? isMuted : undefined}
         loop
         playsInline
-        preload="auto"
+        preload="metadata"
         poster={reel.thumbnailUrl || (reel as any).coverUrl}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}

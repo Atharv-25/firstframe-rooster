@@ -84,7 +84,8 @@ export default async function handler(req, res) {
         };
       }
       
-      const bestVideoUrl = row.original_video_url || row.storage_public_url || row.post_url;
+      // Prioritize Supabase permanent storage over temporary Instagram CDN to prevent expiring links
+      const bestVideoUrl = row.storage_public_url || row.original_video_url || row.post_url;
       if (bestVideoUrl) {
         grouped[username].reels.push({
           id: `reel_${row.post_id || row.id}`,
