@@ -10,9 +10,18 @@ const NICHE_OPTIONS = [
   'Fashion', 'Lifestyle', 'Food', 'Baby', 'Travel', 'Tech', 'Gaming', 'Finance',
 ];
 
+export interface Campaign {
+  id: string;
+  name: string;
+  date: string;
+  creators: Creator[];
+}
+
 export default function App() {
   const [creatorsList, setCreatorsList] = useState<Creator[]>([]);
   const [campaignList, setCampaignList] = useState<Creator[]>([]);
+  const [allCampaigns, setAllCampaigns] = useState<Campaign[]>([]);
+  const [showCampaignsModal, setShowCampaignsModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -73,7 +82,22 @@ export default function App() {
         triggerStatus('error', 'Failed to load creators from cloud storage.');
       }
     };
+    const loadCampaigns = async () => {
+      try {
+        const timestamp = new Date().getTime();
+        const { data, error } = await supabase.storage
+          .from('creator-data')
+          .download(`campaigns.json?t=${timestamp}`);
+        if (!error && data) {
+          const text = await data.text();
+          setAllCampaigns(JSON.parse(text));
+        }
+      } catch (e) {
+        console.warn("No campaigns.json found yet or failed to load.", e);
+      }
+    };
     loadCreators();
+    loadCampaigns();
   }, []);
 
   // Load campaign list from localStorage
@@ -176,6 +200,10 @@ export default function App() {
 
   const handleSubmitCampaign = async () => {
     if (campaignList.length === 0) return;
+    
+    const campaignName = window.prompt("Please enter the name for this Campaign:");
+    if (!campaignName) return; // User cancelled
+    
     setSubmittingCampaign(true);
     triggerStatus('success', 'Submitting shortlist to Google Sheets...');
 
@@ -185,6 +213,8 @@ export default function App() {
     try {
       let success = false;
       let errorMsg = '';
+      
+      const payload = { campaignName, creators: campaignList };
 
       if (webAppUrl) {
         // Direct client-side submission with no-cors to prevent CORS/redirect errors.
@@ -194,7 +224,7 @@ export default function App() {
           headers: {
             'Content-Type': 'text/plain',
           },
-          body: JSON.stringify(campaignList),
+          body: JSON.stringify(payload),
         });
         success = true;
       } else {
@@ -202,7 +232,7 @@ export default function App() {
         const res = await fetch('/api/add-to-campaign', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(campaignList),
+          body: JSON.stringify(payload),
         });
         const data = await res.json();
         success = data.success;
@@ -210,7 +240,22 @@ export default function App() {
       }
 
       if (success) {
-        triggerStatus('success', `✓ Successfully submitted ${campaignList.length} creators to Campaign Sheet!`);
+        // Also save to Supabase campaigns.json
+        const newCampaign: Campaign = {
+          id: `camp_${Date.now()}`,
+          name: campaignName,
+          date: new Date().toISOString(),
+          creators: campaignList
+        };
+        const updatedCampaigns = [...allCampaigns, newCampaign];
+        setAllCampaigns(updatedCampaigns);
+        
+        // Upload to storage without awaiting to not block UI
+        supabase.storage.from('creator-data')
+          .upload('campaigns.json', JSON.stringify(updatedCampaigns, null, 2), {upsert: true})
+          .catch(err => console.error("Failed to sync campaigns", err));
+
+        triggerStatus('success', `✓ Successfully submitted ${campaignList.length} creators to Campaign!`);
         setCampaignList([]);
         localStorage.removeItem('campaignList');
       } else {
@@ -426,6 +471,54 @@ export default function App() {
     }
   };
 
+  const exportToCSV = () => {
+    if (campaignList.length === 0) {
+      triggerStatus('error', 'No creators selected to export!');
+      return;
+    }
+    const headers = ['Name', 'Handle', 'Profile URL', 'Followers', 'Niches', 'Reel Video'];
+    const rows = campaignList.map(c => {
+      const name = c.name ? c.name.replace(/"/g, '""') : '';
+      const handle = c.handle ? c.handle.replace(/"/g, '""') : '';
+      const profile = c.profileUrl ? c.profileUrl.replace(/"/g, '""') : '';
+      const followers = c.followers ? c.followers.replace(/"/g, '""') : '';
+      const niches = c.niches ? c.niches.join(', ').replace(/"/g, '""') : '';
+      const reel = c.reels && c.reels[0] ? c.reels[0].videoUrl.replace(/"/g, '""') : '';
+      return `"${name}","${handle}","${profile}","${followers}","${niches}","${reel}"`;
+    });
+    
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', 'FirstFrame_Campaign_Export.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportCampaignCSV = (campaign: Campaign) => {
+    const headers = ['Name', 'Handle', 'Profile URL', 'Followers', 'Niches', 'Reel Video'];
+    const rows = campaign.creators.map(c => {
+      const name = c.name ? c.name.replace(/"/g, '""') : '';
+      const handle = c.handle ? c.handle.replace(/"/g, '""') : '';
+      const profile = c.profileUrl ? c.profileUrl.replace(/"/g, '""') : '';
+      const followers = c.followers ? c.followers.replace(/"/g, '""') : '';
+      const niches = c.niches ? c.niches.join(', ').replace(/"/g, '""') : '';
+      const reel = c.reels && c.reels[0] ? c.reels[0].videoUrl.replace(/"/g, '""') : '';
+      return `"${name}","${handle}","${profile}","${followers}","${niches}","${reel}"`;
+    });
+    
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', `${campaign.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_creators.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="app-canvas">
       {/* Toast Alert */}
@@ -448,11 +541,18 @@ export default function App() {
 
           {/* Action buttons (Only shown in Admin Route) */}
           {isAdminView && (
-            <div className="header-actions">
+            <div className="header-actions" style={{ display: 'flex', gap: '8px' }}>
               <div className="admin-badge">
                 <Shield size={14} />
                 <span>Admin Mode</span>
               </div>
+              <button
+                className="action-btn action-btn--secondary"
+                style={{ backgroundColor: '#fff', color: '#111', border: '1px solid #e0e0e0' }}
+                onClick={() => setShowCampaignsModal(true)}
+              >
+                <span>Manage Campaigns</span>
+              </button>
               <button
                 className="action-btn action-btn--primary"
                 onClick={() => {
@@ -505,8 +605,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* Campaign Shortlist Floating Pill (Only visible in public brand view) */}
-      {!isAdminView && (
+      {/* Campaign Shortlist Floating Pill */}
+      {true && (
         <AnimatePresence>
           {campaignList.length > 0 && (
             <motion.div
@@ -541,18 +641,75 @@ export default function App() {
                   {submittingCampaign ? 'Submitting...' : 'Submit Shortlist'}
                 </button>
                 <div className="campaign-pill__divider"></div>
-                <button
-                  type="button"
-                  className="campaign-pill__clear-btn"
-                  onClick={clearCampaign}
-                  disabled={submittingCampaign}
-                >
-                  Clear
-                </button>
+                {isAdminView && (
+                  <>
+                    <button
+                      type="button"
+                      className="campaign-pill__submit-btn"
+                      style={{ background: '#fff', color: '#111', border: '1px solid #e0e0e0' }}
+                      onClick={exportToCSV}
+                    >
+                      Export CSV
+                    </button>
+                    <div className="campaign-pill__divider"></div>
+                    <button 
+                      type="button"
+                      className="campaign-pill__clear-btn"
+                      onClick={clearCampaign}
+                      disabled={submittingCampaign}
+                    >
+                      Clear
+                    </button>
+                  </>
+                )}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
+      )}
+
+      {/* Manage Campaigns Modal (Admin only) */}
+      {showCampaignsModal && (
+        <div className="modal-overlay" onClick={() => setShowCampaignsModal(false)}>
+          <div className="modal-card" style={{ maxWidth: '600px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Manage Campaigns</h3>
+              <button
+                className="modal-close"
+                onClick={() => setShowCampaignsModal(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="modal-body" style={{ padding: '24px', maxHeight: '60vh', overflowY: 'auto' }}>
+              {allCampaigns.length === 0 ? (
+                <p style={{ color: '#666', textAlign: 'center' }}>No campaigns have been submitted yet.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {allCampaigns.map(camp => (
+                    <div key={camp.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', background: '#f9f9f9', borderRadius: '12px', border: '1px solid #eee' }}>
+                      <div>
+                        <h4 style={{ margin: '0 0 4px 0', fontSize: '16px', color: '#111' }}>{camp.name}</h4>
+                        <div style={{ display: 'flex', gap: '12px', fontSize: '13px', color: '#666' }}>
+                          <span>{camp.creators.length} Creators</span>
+                          <span>•</span>
+                          <span>{new Date(camp.date).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      <button
+                        className="action-btn action-btn--secondary"
+                        style={{ backgroundColor: '#fff', border: '1px solid #ddd', padding: '8px 16px', fontSize: '13px' }}
+                        onClick={() => exportCampaignCSV(camp)}
+                      >
+                        Export CSV
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Add Creator Modal (Admin only) */}
