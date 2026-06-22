@@ -143,6 +143,72 @@ function apiPlugin() {
           return;
         }
 
+        // --- DIRECT CLOUDINARY UPLOAD PIPELINE ---
+        if (req.url === '/api/upload-video' && req.method === 'POST') {
+          const cloudUrl = process.env.VITE_CLOUDINARY_URL?.trim();
+          if (!cloudUrl) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Missing Cloudinary config' }));
+            return;
+          }
+          const parsed = new URL(cloudUrl);
+          cloudinary.config({
+            cloud_name: parsed.hostname,
+            api_key: parsed.username,
+            api_secret: parsed.password
+          });
+
+          const uploadStream = cloudinary.uploader.upload_stream({ resource_type: 'video', folder: 'firstframe-creators' }, (error, result) => {
+            if (error) {
+              console.error('Cloudinary upload error:', error);
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: error.message }));
+            } else {
+              console.log('Successfully uploaded to Cloudinary:', result.secure_url);
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true, url: result.secure_url }));
+            }
+          });
+          
+          req.pipe(uploadStream);
+          return;
+        }
+
+        // --- DIRECT CLOUDINARY DELETE PIPELINE ---
+        if (req.url === '/api/delete-video' && req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => { body += chunk; });
+          req.on('end', async () => {
+            try {
+              const { url } = JSON.parse(body);
+              if (!url || !url.includes('cloudinary.com')) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Invalid Cloudinary URL' }));
+                return;
+              }
+
+              const cloudUrl = process.env.VITE_CLOUDINARY_URL?.trim();
+              const parsed = new URL(cloudUrl);
+              cloudinary.config({ cloud_name: parsed.hostname, api_key: parsed.username, api_secret: parsed.password });
+
+              // Extract public_id from secure_url (e.g. https://res.cloudinary.com/dqkfarwzn/video/upload/v1782140360/firstframe-creators/rkcuax6gsf5gnddr5wsv.mp4)
+              const parts = url.split('/');
+              const filename = parts.pop();
+              const publicId = 'firstframe-creators/' + filename.split('.')[0];
+
+              console.log('Deleting from Cloudinary:', publicId);
+              cloudinary.uploader.destroy(publicId, { resource_type: 'video' }, (error, result) => {
+                 res.writeHead(200, { 'Content-Type': 'application/json' });
+                 res.end(JSON.stringify({ success: true, result }));
+              });
+            } catch (err: any) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: err.message }));
+            }
+          });
+          return;
+        }
+
         if (req.url === '/api/add-to-campaign' && req.method === 'POST') {
           let body = '';
           req.on('data', chunk => { body += chunk; });

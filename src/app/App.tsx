@@ -38,6 +38,9 @@ export default function App() {
     label: 'Demo Reel',
     videoUrl: '',
   }]);
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+
+  // Stats Data [modalError, setModalError] = useState<string | null>('');
   const [modalError, setModalError] = useState<string | null>('');
   const [isFetchingProfile, setIsFetchingProfile] = useState(false);
   const [isSavingCreator, setIsSavingCreator] = useState(false);
@@ -341,7 +344,32 @@ export default function App() {
     setShowAddModal(true);
   };
 
-
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsUploadingVideo(true);
+    setModalError('');
+    try {
+      const res = await fetch('/api/upload-video', {
+        method: 'POST',
+        body: file,
+        headers: {
+          'Content-Type': file.type
+        }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setNewReels([{ ...newReels[0], videoUrl: data.url }]);
+      } else {
+        setModalError(`Upload failed: ${data.error}`);
+      }
+    } catch (err: any) {
+      setModalError(`Upload error: ${err.message}`);
+    } finally {
+      setIsUploadingVideo(false);
+    }
+  };
 
   const handleAddCreator = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -410,6 +438,18 @@ export default function App() {
         await saveCreatorsToBackend(updatedList);
   
         const reelUrl = newReels[0]?.videoUrl?.trim() || '';
+
+        // Trigger Cloudinary deletion if editing and URL changed
+        if (editingCreator && editingCreator.reels && editingCreator.reels.length > 0) {
+          const oldUrl = editingCreator.reels[0].videoUrl;
+          if (oldUrl && oldUrl.includes('cloudinary.com') && oldUrl !== reelUrl) {
+            console.log('Replacing video, deleting old Cloudinary file:', oldUrl);
+            fetch('/api/delete-video', {
+              method: 'POST',
+              body: JSON.stringify({ url: oldUrl })
+            }).catch(console.error);
+          }
+        }
   
         // 2. Trigger Apify to scrape reels ONLY IF it's a new external URL
         if (reelUrl.startsWith('http')) {
@@ -697,7 +737,25 @@ export default function App() {
         </div>
 
         {/* Niche Filter Bar */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px', width: '100%' }}>
+        <div style={{ 
+          display: 'flex', 
+          gap: '8px', 
+          flexWrap: 'nowrap', 
+          overflowX: 'auto',
+          marginBottom: '16px', 
+          width: '100%',
+          paddingBottom: '8px',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }}
+        className="hide-scrollbar"
+        >
+          <style>{`
+            .hide-scrollbar::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
           {[NICHE_ALL, ...NICHE_OPTIONS].map((niche) => (
             <button
               key={niche}
@@ -714,6 +772,8 @@ export default function App() {
                 transition: 'all 0.15s ease',
                 fontFamily: 'Inter, sans-serif',
                 letterSpacing: '0.2px',
+                whiteSpace: 'nowrap',
+                flexShrink: 0
               }}
             >
               {niche}
@@ -956,9 +1016,25 @@ export default function App() {
                       value={newReels[0].videoUrl}
                       onChange={(e) => updateReel(0, 'videoUrl', e.target.value)}
                       placeholder="https://... or local .mp4 filename"
+                      disabled={isUploadingVideo}
                     />
+                    
+                    <div style={{ marginTop: '8px', marginBottom: '8px', padding: '12px', background: '#222', borderRadius: '6px', border: '1px dashed #444', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <span style={{ color: '#ccc', fontSize: '13px' }}>
+                        Or upload a video directly to Cloudinary:
+                      </span>
+                      <input 
+                        type="file" 
+                        accept="video/mp4,video/quicktime" 
+                        onChange={handleFileUpload} 
+                        disabled={isUploadingVideo}
+                        style={{ fontSize: '14px' }}
+                      />
+                      {isUploadingVideo && <span style={{ color: '#6abf69', fontSize: '13px' }}>Uploading to Cloudinary... please wait...</span>}
+                    </div>
+
                     <span className="reel-entry__helper">
-                      Supports: direct .mp4 · Instagram reels · YouTube Shorts
+                      Supports: direct Cloudinary links · direct .mp4
                     </span>
                     <div className="reel-entry__row" style={{ gridTemplateColumns: '1fr' }}>
                       <input

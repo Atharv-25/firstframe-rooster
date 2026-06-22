@@ -37,15 +37,34 @@ export default async function handler(req, res) {
         const rapidJson = await rapidRes.json();
         
         if (rapidJson.status === true && rapidJson.is_video) {
-          const videoUrl = rapidJson.video_url;
+          let videoUrl = rapidJson.video_url;
           const coverUrl = rapidJson.thumbnail_src || rapidJson.thumbnail_url || rapidJson.video_url;
           
           let shortcode = 'unknown';
           try {
-            const parts = targetUrl.split('/');
-            shortcode = parts.includes('reel') ? parts[parts.indexOf('reel')+1] : parts.includes('p') ? parts[parts.indexOf('p')+1] : Date.now().toString();
-            shortcode = shortcode.split('?')[0];
+            shortcode = rapidJson.shortcode || targetUrl.split('reel/')[1]?.split('/')[0] || Date.now();
           } catch(e) {}
+          
+          // Download and permanently store video in Supabase so it doesn't expire
+          try {
+            console.log(`Downloading MP4 for permanent storage...`);
+            const vidRes = await fetch(videoUrl);
+            const arrayBuffer = await vidRes.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            
+            const filename = `reel_${shortcode}_${Date.now()}.mp4`;
+            const { error: upErr } = await supabase.storage.from('videos').upload(filename, buffer, {
+              contentType: 'video/mp4',
+              upsert: true
+            });
+            
+            if (!upErr) {
+               videoUrl = `${process.env.VITE_SUPABASE_URL}/storage/v1/object/public/videos/${filename}`;
+               console.log(`Successfully stored in Supabase: ${videoUrl}`);
+            }
+          } catch(err) {
+            console.error(`Failed to store video permanently:`, err.message);
+          }
           
           let username = 'creator';
           try {
@@ -118,7 +137,12 @@ export default async function handler(req, res) {
         try {
           console.log(`Uploading to Cloudinary for ${username}...`);
           const cloudUrl = process.env.VITE_CLOUDINARY_URL.trim();
-          cloudinary.config({ cloudinary_url: cloudUrl });
+          const parsed = new URL(cloudUrl);
+          cloudinary.config({
+            cloud_name: parsed.hostname,
+            api_key: parsed.username,
+            api_secret: parsed.password
+          });
           
           const uploadRes = await cloudinary.uploader.upload(bestVideoUrl, {
             resource_type: 'video',

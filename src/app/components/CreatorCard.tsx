@@ -368,18 +368,7 @@ function ExpandedView({ creator, inCampaign, onToggleCampaign, onClose, isAdminV
           {/* Sticky header */}
           <div className="expanded-header">
             <div className="expanded-header__info">
-              <h2 className="expanded-header__name">{isAdminView ? creator.name : creator.name.split(' ')[0]}</h2>
-              {isAdminView && creator.handle && (
-                <a
-                  href={creator.profileUrl || `https://instagram.com/${creator.handle}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="expanded-header__handle"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  @{creator.handle}
-                </a>
-              )}
+              <h2 className="expanded-header__name">{creator.name.split(' ')[0]}</h2>
             </div>
             <button
               type="button"
@@ -392,10 +381,12 @@ function ExpandedView({ creator, inCampaign, onToggleCampaign, onClose, isAdminV
 
           {/* Stats bar */}
           <div className="expanded-stats">
-            <div className="expanded-stats__item">
-              <span className="expanded-stats__label">Followers</span>
-              <span className="expanded-stats__value">{followersStr}</span>
-            </div>
+            {isAdminView && (
+              <div className="expanded-stats__item">
+                <span className="expanded-stats__label">Followers</span>
+                <span className="expanded-stats__value">{followersStr}</span>
+              </div>
+            )}
             {creator.engagementRate && (
               <>
                 <span className="expanded-stats__dot">·</span>
@@ -483,14 +474,10 @@ export const CreatorCard = memo(function CreatorCard({
 
   const [followersStr, setFollowersStr] = useState(() => localStorage.getItem(`creator_followers_${creator.id}`) || creator.followers);
   const [viewsStr, setViewsStr] = useState(() => localStorage.getItem(`creator_views_${creator.id}`) || creator.avgViews);
-  const [isOpen, setIsOpen] = useState(false);
   const [nichesExpanded, setNichesExpanded] = useState(false);
 
   const handleCardClick = () => {
-    // In admin mode, click opens the edit modal via onEdit; for public, it opens expanded view
-    if (!isAdminView) {
-      setIsOpen(true);
-    }
+    // Intentionally empty: no popup
   };
 
   return (
@@ -498,7 +485,7 @@ export const CreatorCard = memo(function CreatorCard({
       <div
         className={`cc ${inCampaign ? 'cc--selected' : ''}`}
         onClick={handleCardClick}
-        style={{ cursor: isAdminView ? 'default' : 'pointer' }}
+        style={{ cursor: 'default' }}
       >
         {/* Thumbnail area */}
         <div className="cc__thumb">
@@ -553,8 +540,7 @@ export const CreatorCard = memo(function CreatorCard({
         {/* Info section */}
         <div className="cc__info">
           <div className="cc__name-row">
-            <span className="cc__name">{isAdminView ? creator.name : creator.name.split(' ')[0]}</span>
-            {isAdminView && creator.handle && <span className="cc__handle">@{creator.handle}</span>}
+            <span className="cc__name">{creator.name.split(' ')[0]}</span>
           </div>
           <div className="cc__stats-line">
             <span>{followersStr} followers</span>
@@ -564,8 +550,18 @@ export const CreatorCard = memo(function CreatorCard({
               style={{ marginTop: '6px' }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                {(nichesExpanded ? creator.niches : creator.niches.slice(0, 3)).map((niche) => (
+              <div 
+                style={{ 
+                  display: 'flex', 
+                  gap: '5px', 
+                  flexWrap: 'nowrap',
+                  overflowX: 'auto',
+                  paddingBottom: '2px',
+                  msOverflowStyle: 'none',
+                  scrollbarWidth: 'none'
+                }}
+              >
+                {creator.niches.map((niche) => (
                   <span
                     key={niche}
                     style={{
@@ -582,28 +578,6 @@ export const CreatorCard = memo(function CreatorCard({
                     {niche}
                   </span>
                 ))}
-                {creator.niches.length > 3 && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setNichesExpanded(!nichesExpanded);
-                    }}
-                    style={{
-                      background: nichesExpanded ? '#1A1A1A' : '#e8e8e8',
-                      color: nichesExpanded ? '#fff' : '#555',
-                      fontSize: '10px',
-                      padding: '3px 8px',
-                      borderRadius: '12px',
-                      fontWeight: 600,
-                      border: 'none',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {nichesExpanded ? '−' : `+${creator.niches.length - 3}`}
-                  </button>
-                )}
               </div>
             </div>
           )}
@@ -634,21 +608,7 @@ export const CreatorCard = memo(function CreatorCard({
       </div>
 
       {/* Expanded View (public only) */}
-      <AnimatePresence>
-        {isOpen && !isAdminView && (
-          <ExpandedView
-            creator={creator}
-            inCampaign={inCampaign}
-            onToggleCampaign={() => onToggleCampaign(creator)}
-            onClose={() => setIsOpen(false)}
-            isAdminView={isAdminView}
-            followersStr={followersStr}
-            viewsStr={viewsStr}
-            setFollowersStr={setFollowersStr}
-            setViewsStr={setViewsStr}
-          />
-        )}
-      </AnimatePresence>
+      {/* The Expanded Modal is completely removed per user request */}
     </>
   );
 }, (prev, next) => {
