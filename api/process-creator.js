@@ -183,20 +183,8 @@ export default async function handler(req, res) {
       }
 
       if (dbCreator.reels.length > 0) {
-        // Strip out any manually pasted instagram.com URLs since we have the raw .mp4 versions now
-        existingCreator.reels = existingCreator.reels.filter(r => !r.videoUrl.includes('instagram.com/'));
-      }
-
-      const existingReelIds = existingCreator.reels.map(r => r.id);
-      for (const reel of dbCreator.reels) {
-        const idx = existingReelIds.indexOf(reel.id);
-        if (idx === -1) {
-          // Prepend high-quality scraped reels so they show up first!
-          existingCreator.reels.unshift(reel);
-          existingReelIds.unshift(reel.id);
-        } else {
-          existingCreator.reels[idx] = reel;
-        }
+        // Enforce STRICTLY 1 video per creator. Overwrite any existing reels with the newly fetched one.
+        existingCreator.reels = [dbCreator.reels[0]];
       }
     }
 
