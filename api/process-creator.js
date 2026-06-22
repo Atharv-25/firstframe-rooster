@@ -28,18 +28,17 @@ export default async function handler(req, res) {
     if (targetUrl && (targetUrl.includes('instagram.com/reel/') || targetUrl.includes('instagram.com/p/'))) {
       console.log(`Fetching reel from RapidAPI: ${targetUrl}`);
       try {
-        const rapidRes = await fetch(`https://instagram-downloader-download-instagram-stories-videos4.p.rapidapi.com/convert?url=${encodeURIComponent(targetUrl)}`, {
+        const rapidRes = await fetch(`https://instagram-looter2.p.rapidapi.com/post?url=${encodeURIComponent(targetUrl)}`, {
           headers: {
             'x-rapidapi-key': rapidApiKey,
-            'x-rapidapi-host': 'instagram-downloader-download-instagram-stories-videos4.p.rapidapi.com'
+            'x-rapidapi-host': 'instagram-looter2.p.rapidapi.com'
           }
         });
         const rapidJson = await rapidRes.json();
         
-        if (rapidJson.media && rapidJson.media.length > 0) {
-          const videoObj = rapidJson.media.find(m => m.type === 'video') || rapidJson.media[0];
-          const videoUrl = videoObj.url;
-          const coverUrl = videoObj.thumbnail || videoObj.url;
+        if (rapidJson.status === true && rapidJson.is_video) {
+          const videoUrl = rapidJson.video_url;
+          const coverUrl = rapidJson.thumbnail_src || rapidJson.thumbnail_url || rapidJson.video_url;
           
           let shortcode = 'unknown';
           try {

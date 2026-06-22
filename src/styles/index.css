@@ -1058,11 +1058,14 @@
   column-count: 2;
   column-gap: 12px;
   width: 100%;
+  overflow: visible;
 }
 
 .masonry-item {
   break-inside: avoid;
   margin-bottom: 12px;
+  /* prevent hover translateY from clipping at the top */
+  padding-top: 2px;
 }
 
 @media (min-width: 640px) {
