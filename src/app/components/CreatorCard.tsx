@@ -483,10 +483,21 @@ export const CreatorCard = memo(function CreatorCard({
 
   const [followersStr, setFollowersStr] = useState(() => localStorage.getItem(`creator_followers_${creator.id}`) || creator.followers);
   const [viewsStr, setViewsStr] = useState(() => localStorage.getItem(`creator_views_${creator.id}`) || creator.avgViews);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleCardClick = () => {
+    // In admin mode, click opens the edit modal via onEdit; for public, it opens expanded view
+    if (!isAdminView) {
+      setIsOpen(true);
+    }
+  };
 
   return (
+    <>
       <div
         className={`cc ${inCampaign ? 'cc--selected' : ''}`}
+        onClick={handleCardClick}
+        style={{ cursor: isAdminView ? 'default' : 'pointer' }}
       >
         {/* Thumbnail area */}
         <div className="cc__thumb">
@@ -548,12 +559,17 @@ export const CreatorCard = memo(function CreatorCard({
             <span>{followersStr} followers</span>
           </div>
           {creator.niches && creator.niches.length > 0 && (
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
-              {creator.niches.map((niche) => (
-                <span key={niche} style={{ background: '#f5f5f5', color: '#555', fontSize: '10px', padding: '4px 8px', borderRadius: '12px', fontWeight: 600, letterSpacing: '0.2px' }}>
+            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginTop: '6px' }}>
+              {creator.niches.slice(0, 3).map((niche) => (
+                <span key={niche} style={{ background: '#f5f5f5', color: '#555', fontSize: '10px', padding: '3px 8px', borderRadius: '12px', fontWeight: 600, letterSpacing: '0.2px', whiteSpace: 'nowrap' }}>
                   {niche}
                 </span>
               ))}
+              {creator.niches.length > 3 && (
+                <span style={{ background: '#e8e8e8', color: '#777', fontSize: '10px', padding: '3px 8px', borderRadius: '12px', fontWeight: 600 }}>
+                  +{creator.niches.length - 3}
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -581,6 +597,24 @@ export const CreatorCard = memo(function CreatorCard({
           </div>
         )}
       </div>
+
+      {/* Expanded View (public only) */}
+      <AnimatePresence>
+        {isOpen && !isAdminView && (
+          <ExpandedView
+            creator={creator}
+            inCampaign={inCampaign}
+            onToggleCampaign={() => onToggleCampaign(creator)}
+            onClose={() => setIsOpen(false)}
+            isAdminView={isAdminView}
+            followersStr={followersStr}
+            viewsStr={viewsStr}
+            setFollowersStr={setFollowersStr}
+            setViewsStr={setViewsStr}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }, (prev, next) => {
   return prev.creator.id === next.creator.id && 

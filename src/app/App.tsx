@@ -6,9 +6,11 @@ import { Plus, Check, AlertCircle, X, CheckSquare, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const NICHE_OPTIONS = [
-  'Skincare', 'Makeup', 'Hair', 'Body', 'Nails', 'Wellness', 'Fitness',
-  'Fashion', 'Lifestyle', 'Food', 'Baby', 'Travel', 'Tech', 'Gaming', 'Finance',
+  'Fashion', 'Makeup', 'Skincare', 'Wellness', 'Fitness',
+  'Hair', 'Body', 'Nails', 'Lifestyle', 'Food', 'Baby', 'Travel', 'Tech', 'Gaming', 'Finance',
 ];
+
+const NICHE_ALL = 'All';
 
 export interface Campaign {
   id: string;
@@ -45,6 +47,8 @@ export default function App() {
   const [isAdminView, setIsAdminView] = useState(() => window.location.pathname === '/kalva');
 
   const [submittingCampaign, setSubmittingCampaign] = useState(false);
+  const [selectedNiche, setSelectedNiche] = useState<string>(NICHE_ALL);
+  const [isSyncingFollowers, setIsSyncingFollowers] = useState(false);
 
   // Listen to popstate event to handle forward/backward path changes
   useEffect(() => {
@@ -519,6 +523,62 @@ export default function App() {
     document.body.removeChild(link);
   };
 
+  const syncAllFollowers = async () => {
+    if (isSyncingFollowers) return;
+    setIsSyncingFollowers(true);
+    triggerStatus('success', 'Syncing followers for all creators...');
+    
+    const rapidKey = import.meta.env.VITE_RAPID_API_KEY;
+    if (!rapidKey) {
+      triggerStatus('error', 'No RapidAPI key configured.');
+      setIsSyncingFollowers(false);
+      return;
+    }
+
+    const updated = [...creatorsList];
+    let successCount = 0;
+    
+    for (let i = 0; i < updated.length; i++) {
+      const creator = updated[i];
+      if (!creator.handle) continue;
+      try {
+        const res = await fetch(
+          `https://instagram-downloader-download-instagram-stories-videos4.p.rapidapi.com/convert?url=https://www.instagram.com/${creator.handle}/`,
+          {
+            method: 'GET',
+            headers: {
+              'x-rapidapi-key': rapidKey,
+              'x-rapidapi-host': 'instagram-downloader-download-instagram-stories-videos4.p.rapidapi.com',
+            },
+          }
+        );
+        const json = await res.json();
+        // Try to extract follower count from response metadata
+        const followerCount = json?.data?.followers_count || json?.followers || json?.edge_followed_by?.count;
+        if (followerCount !== undefined) {
+          const formatted = followerCount >= 1000 
+            ? `${(followerCount / 1000).toFixed(1)}K` 
+            : `${followerCount}`;
+          updated[i] = { ...creator, followers: formatted };
+          successCount++;
+        }
+      } catch (e) {
+        console.warn(`Failed to sync ${creator.handle}`, e);
+      }
+      // Small delay to avoid rate limiting
+      await new Promise(r => setTimeout(r, 300));
+    }
+    
+    if (successCount > 0) {
+      setCreatorsList(updated);
+      await saveCreatorsToBackend(updated);
+      triggerStatus('success', `✓ Synced followers for ${successCount} creators!`);
+    } else {
+      triggerStatus('error', 'Could not fetch followers. API may not support profile scraping.');
+    }
+    setIsSyncingFollowers(false);
+  };
+
   return (
     <div className="app-canvas">
       {/* Toast Alert */}
@@ -554,6 +614,14 @@ export default function App() {
                 <span>Manage Campaigns</span>
               </button>
               <button
+                className="action-btn action-btn--secondary"
+                style={{ backgroundColor: isSyncingFollowers ? '#f0f0f0' : '#fff', color: '#111', border: '1px solid #e0e0e0' }}
+                onClick={syncAllFollowers}
+                disabled={isSyncingFollowers}
+              >
+                <span>{isSyncingFollowers ? 'Syncing...' : 'Sync Followers'}</span>
+              </button>
+              <button
                 className="action-btn action-btn--primary"
                 onClick={() => {
                   resetAddModal();
@@ -587,9 +655,36 @@ export default function App() {
           </p>
         </div>
 
+        {/* Niche Filter Bar */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px', width: '100%' }}>
+          {[NICHE_ALL, ...NICHE_OPTIONS].map((niche) => (
+            <button
+              key={niche}
+              onClick={() => setSelectedNiche(niche)}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '20px',
+                border: selectedNiche === niche ? '1.5px solid #111' : '1.5px solid #ddd',
+                background: selectedNiche === niche ? '#111' : '#fff',
+                color: selectedNiche === niche ? '#fff' : '#555',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                fontFamily: 'Inter, sans-serif',
+                letterSpacing: '0.2px',
+              }}
+            >
+              {niche}
+            </button>
+          ))}
+        </div>
+
         {/* Creator Masonry Grid */}
-        <div className="masonry-grid">
-          {creatorsList.map((creator) => (
+        <div className="masonry-grid" style={{ paddingTop: '4px' }}>
+          {creatorsList
+            .filter(c => selectedNiche === NICHE_ALL || (c.niches && c.niches.some(n => n.toLowerCase() === selectedNiche.toLowerCase())))
+            .map((creator) => (
             <div key={creator.id} className="masonry-item">
               <CreatorCard
                 creator={creator}
