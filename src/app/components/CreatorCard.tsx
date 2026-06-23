@@ -542,9 +542,11 @@ export const CreatorCard = memo(function CreatorCard({
           <div className="cc__name-row">
             <span className="cc__name">{creator.name.split(' ')[0]}</span>
           </div>
-          <div className="cc__stats-line">
-            <span>{followersStr} followers</span>
-          </div>
+          {isAdminView && (
+            <div className="cc__stats-line">
+              <span>{followersStr} followers</span>
+            </div>
+          )}
           {creator.niches && creator.niches.length > 0 && (
             <div
               style={{ marginTop: '6px' }}
