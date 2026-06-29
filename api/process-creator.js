@@ -28,21 +28,22 @@ export default async function handler(req, res) {
     if (targetUrl && (targetUrl.includes('instagram.com/reel/') || targetUrl.includes('instagram.com/p/'))) {
       console.log(`Fetching reel from RapidAPI: ${targetUrl}`);
       try {
-        const rapidRes = await fetch(`https://instagram-looter2.p.rapidapi.com/post?url=${encodeURIComponent(targetUrl)}`, {
+        const rapidRes = await fetch(`https://instagram-downloader-v2-scraper-reels-igtv-posts-stories.p.rapidapi.com/get-post?url=${encodeURIComponent(targetUrl)}`, {
           headers: {
             'x-rapidapi-key': rapidApiKey,
-            'x-rapidapi-host': 'instagram-looter2.p.rapidapi.com'
+            'x-rapidapi-host': 'instagram-downloader-v2-scraper-reels-igtv-posts-stories.p.rapidapi.com'
           }
         });
         const rapidJson = await rapidRes.json();
         
-        if (rapidJson.status === true && rapidJson.is_video) {
-          let videoUrl = rapidJson.video_url;
-          const coverUrl = rapidJson.thumbnail_src || rapidJson.thumbnail_url || rapidJson.video_url;
+        const firstMedia = rapidJson.media && rapidJson.media.length > 0 ? rapidJson.media[0] : null;
+        if (firstMedia && firstMedia.is_video) {
+          let videoUrl = firstMedia.url;
+          const coverUrl = firstMedia.thumb || firstMedia.url;
           
           let shortcode = 'unknown';
           try {
-            shortcode = rapidJson.shortcode || targetUrl.split('reel/')[1]?.split('/')[0] || Date.now();
+            shortcode = targetUrl.split('reel/')[1]?.split('/')[0] || targetUrl.split('p/')[1]?.split('/')[0] || Date.now();
           } catch(e) {}
           
           // Download and permanently store video in Supabase so it doesn't expire

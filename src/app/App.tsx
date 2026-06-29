@@ -69,10 +69,9 @@ export default function App() {
     const loadCreators = async () => {
       try {
         // Use a timestamp to prevent browser caching of the JSON file
-        const timestamp = new Date().getTime();
         const { data, error } = await supabase.storage
           .from('creator-data')
-          .download(`creators.json?t=${timestamp}`);
+          .download('creators.json');
           
         if (error) throw error;
         const text = await data.text();
@@ -93,10 +92,9 @@ export default function App() {
     };
     const loadCampaigns = async () => {
       try {
-        const timestamp = new Date().getTime();
         const { data, error } = await supabase.storage
           .from('creator-data')
-          .download(`campaigns.json?t=${timestamp}`);
+          .download('campaigns.json');
         if (!error && data) {
           const text = await data.text();
           setAllCampaigns(JSON.parse(text));
