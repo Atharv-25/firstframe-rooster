@@ -88,17 +88,17 @@ export default function App() {
     };
     const loadCampaigns = async () => {
       try {
-        const { data, error } = await supabase.storage.from('creator-data').download('campaigns.json');
-        if (error) {
-          console.warn("No campaigns.json found yet or failed to load.", error);
+        const webAppUrl = import.meta.env.VITE_SHEETS_WEBAPP_URL || "https://script.google.com/macros/s/AKfycbwf5v7V1BqK_Sga3X0CXRksfyz__jRbHyAeGtPvzsSaiMXqQwoqEh0faAOf6sIc6AHJjw/exec";
+        const res = await fetch(webAppUrl);
+        const data = await res.json();
+        
+        if (data && data.success && data.campaigns) {
+          setAllCampaigns(data.campaigns);
+        } else {
           setAllCampaigns([]);
-          return;
         }
-        const text = await data.text();
-        const parsed = JSON.parse(text);
-        setAllCampaigns(parsed || []);
       } catch (e) {
-        console.warn("No campaigns.json found yet or failed to load.", e);
+        console.warn("Failed to load campaigns from Google Sheets.", e);
         setAllCampaigns([]);
       }
     };
@@ -210,17 +210,20 @@ export default function App() {
     const campaignName = window.prompt("Please enter the name for this Campaign:");
     if (!campaignName) return; // User cancelled
     
+    const makerName = window.prompt("Please enter your name (who is making this sheet):");
+    if (!makerName) return; // User cancelled
+    
     setSubmittingCampaign(true);
     triggerStatus('success', 'Submitting shortlist to Google Sheets...');
 
     // Check if direct Google Sheets Web App URL is configured in environment variables
-    const webAppUrl = import.meta.env.VITE_SHEETS_WEBAPP_URL || "https://script.google.com/macros/s/AKfycbw13qQVMpT3k0IY_LLDUcl4_PyK0tVopVbkbFGZcpwBEqMH_H5AdxCrkPJnYimWCBri-Q/exec";
+    const webAppUrl = import.meta.env.VITE_SHEETS_WEBAPP_URL || "https://script.google.com/macros/s/AKfycbwf5v7V1BqK_Sga3X0CXRksfyz__jRbHyAeGtPvzsSaiMXqQwoqEh0faAOf6sIc6AHJjw/exec";
 
     try {
       let success = false;
       let errorMsg = '';
       
-      const payload = { campaignName, creators: campaignList };
+      const payload = { campaignName, makerName, creators: campaignList };
 
       if (webAppUrl) {
         // Direct client-side submission with no-cors to prevent CORS/redirect errors.
@@ -246,7 +249,6 @@ export default function App() {
       }
 
       if (success) {
-        // Also save to Supabase campaigns.json
         const newCampaign: Campaign = {
           id: `camp_${Date.now()}`,
           name: campaignName,
@@ -255,11 +257,6 @@ export default function App() {
         };
         const updatedCampaigns = [...allCampaigns, newCampaign];
         setAllCampaigns(updatedCampaigns);
-        
-        // Upload to storage without awaiting to not block UI
-        supabase.storage.from('creator-data')
-          .upload('campaigns.json', JSON.stringify(updatedCampaigns, null, 2), {upsert: true})
-          .catch(err => console.error("Failed to sync campaigns", err));
 
         triggerStatus('success', `✓ Successfully submitted ${campaignList.length} creators to Campaign!`);
         setCampaignList([]);
