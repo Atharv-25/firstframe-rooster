@@ -66,17 +66,14 @@ export default function App() {
 
   // Initialize creators from Supabase Storage bucket
   useEffect(() => {
-    const loadCreators = async () => {
-      try {
-        // Use a timestamp to prevent browser caching of the JSON file
-        const { data, error } = await supabase.storage
-          .from('creator-data')
-          .download('creators.json');
-          
-        if (error) throw error;
-        const text = await data.text();
-        const parsed = JSON.parse(text);
-        
+    const loadCreators = () => {
+      // Use a timestamp to prevent browser caching of the JSON file
+      // Try to load from local bundled data instead of Supabase Storage 
+      // to bypass the 'exceed_cached_egress_quota' limit!
+      
+      // We imported 'creators' statically at the top of the file
+      import('./data/creators').then(module => {
+        const parsed = [...module.creators];
         // Sort newest first based on numeric id timestamp
         parsed.sort((a: Creator, b: Creator) => {
           const idA = parseInt(a.id.split('_')[1] || '0');
@@ -85,20 +82,14 @@ export default function App() {
         });
         
         setCreatorsList(parsed);
-      } catch (e) {
-        console.warn("Failed to load cloud creators", e);
-        triggerStatus('error', 'Failed to load creators from cloud storage.');
-      }
+      }).catch(e => {
+        console.error("Failed to load local creators data", e);
+      });
     };
     const loadCampaigns = async () => {
       try {
-        const { data, error } = await supabase.storage
-          .from('creator-data')
-          .download('campaigns.json');
-        if (!error && data) {
-          const text = await data.text();
-          setAllCampaigns(JSON.parse(text));
-        }
+        // We will skip loading campaigns from cloud storage due to quota
+        setAllCampaigns([]);
       } catch (e) {
         console.warn("No campaigns.json found yet or failed to load.", e);
       }
