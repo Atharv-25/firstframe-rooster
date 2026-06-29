@@ -88,7 +88,7 @@ export default function App() {
     };
     const loadCampaigns = async () => {
       try {
-        const webAppUrl = import.meta.env.VITE_SHEETS_WEBAPP_URL || "https://script.google.com/macros/s/AKfycbw0T67rvrwrpiitYB3mPo5DRF9KbFoaQ9qfyKRV0flsT1lD5zh0iA-kzKkLAKeBsaakZA/exec";
+        const webAppUrl = import.meta.env.VITE_SHEETS_WEBAPP_URL || "https://script.google.com/macros/s/AKfycbwf5v7V1BqK_Sga3X0CXRksfyz__jRbHyAeGtPvzsSaiMXqQwoqEh0faAOf6sIc6AHJjw/exec";
         const res = await fetch(webAppUrl);
         const data = await res.json();
         
@@ -217,7 +217,7 @@ export default function App() {
     triggerStatus('success', 'Submitting shortlist to Google Sheets...');
 
     // Check if direct Google Sheets Web App URL is configured in environment variables
-    const webAppUrl = import.meta.env.VITE_SHEETS_WEBAPP_URL || "https://script.google.com/macros/s/AKfycbw0T67rvrwrpiitYB3mPo5DRF9KbFoaQ9qfyKRV0flsT1lD5zh0iA-kzKkLAKeBsaakZA/exec";
+    const webAppUrl = import.meta.env.VITE_SHEETS_WEBAPP_URL || "https://script.google.com/macros/s/AKfycbwf5v7V1BqK_Sga3X0CXRksfyz__jRbHyAeGtPvzsSaiMXqQwoqEh0faAOf6sIc6AHJjw/exec";
 
     try {
       let success = false;
