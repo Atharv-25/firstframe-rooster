@@ -88,10 +88,18 @@ export default function App() {
     };
     const loadCampaigns = async () => {
       try {
-        // We will skip loading campaigns from cloud storage due to quota
-        setAllCampaigns([]);
+        const { data, error } = await supabase.storage.from('creators').download('campaigns.json');
+        if (error) {
+          console.warn("No campaigns.json found yet or failed to load.", error);
+          setAllCampaigns([]);
+          return;
+        }
+        const text = await data.text();
+        const parsed = JSON.parse(text);
+        setAllCampaigns(parsed || []);
       } catch (e) {
         console.warn("No campaigns.json found yet or failed to load.", e);
+        setAllCampaigns([]);
       }
     };
     loadCreators();
