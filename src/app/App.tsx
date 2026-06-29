@@ -88,7 +88,7 @@ export default function App() {
     };
     const loadCampaigns = async () => {
       try {
-        const { data, error } = await supabase.storage.from('creators').download('campaigns.json');
+        const { data, error } = await supabase.storage.from('creator-data').download('campaigns.json');
         if (error) {
           console.warn("No campaigns.json found yet or failed to load.", error);
           setAllCampaigns([]);
