@@ -11,3 +11,6 @@ incomplete_creators.md
 pending_creators.md
 debug_urls.cjs
 test_*
+
+# Raw creator exports - these contain emails and phone numbers
+scripts/incoming/

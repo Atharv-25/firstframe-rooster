@@ -3,7 +3,9 @@ import { Creator, Reel } from '../data/creators';
 import { Plus, Check, X, Play, Volume2, VolumeX, Instagram } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-const GITHUB_VIDEO_BASE = 'https://media.githubusercontent.com/media/Atharv-25/firstframe-rooster/main/public/videos';
+// Videos live in public/videos/ and ship with the build, so the same
+// root-relative path works in dev and in production.
+const VIDEO_BASE = '/videos';
 
 // ── Helper functions ──────────────────────────────────────────────
 
@@ -29,10 +31,9 @@ function getInstagramEmbedUrl(url: string) {
 function resolveVideoSrc(videoUrl: string): string {
   if (!videoUrl) return '';
   if (videoUrl.startsWith('http')) return videoUrl;
-  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  return isLocalhost
-    ? `/videos/${videoUrl}`
-    : `${GITHUB_VIDEO_BASE}/${videoUrl}`;
+  if (videoUrl.startsWith('/')) return videoUrl;
+  // encode so filenames containing spaces or '#' resolve correctly
+  return `${VIDEO_BASE}/${encodeURIComponent(videoUrl)}`;
 }
 
 /** Backward compat: convert old single-video creators to reels[] shape at runtime */
@@ -60,7 +61,6 @@ interface ReelPlayerProps {
 }
 
 function ReelPlayer({ reel, autoPlay = false, previewMode = false }: ReelPlayerProps) {
-  const [fallbackSrc, setFallbackSrc] = useState('');
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -169,8 +169,7 @@ function ReelPlayer({ reel, autoPlay = false, previewMode = false }: ReelPlayerP
     );
   }
 
-  const primarySrc = resolveVideoSrc(reel.videoUrl);
-  const src = fallbackSrc || primarySrc;
+  const src = resolveVideoSrc(reel.videoUrl);
 
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -211,11 +210,6 @@ function ReelPlayer({ reel, autoPlay = false, previewMode = false }: ReelPlayerP
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         style={{ width: '100%', height: '100%', objectFit: 'cover', background: '#000', pointerEvents: 'none' }}
-        onError={() => {
-          if (!fallbackSrc && !reel.videoUrl.startsWith('http')) {
-            setFallbackSrc(`${GITHUB_VIDEO_BASE}/${reel.videoUrl}`);
-          }
-        }}
       />
       {!isPlaying && (
         <div style={{

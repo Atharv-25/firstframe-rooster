@@ -1,4 +1,12 @@
-*.mp4 filter=lfs diff=lfs merge=lfs -text
-*.MP4 filter=lfs diff=lfs merge=lfs -text
-*.MOV filter=lfs diff=lfs merge=lfs -text
-*.mov filter=lfs diff=lfs merge=lfs -text
+# Videos are stored as ordinary git objects, NOT Git LFS.
+#
+# Vercel does not fetch LFS objects during a build, so LFS-tracked videos
+# deployed as pointer stubs and had to be served from GitHub's LFS media
+# endpoint at runtime -- which burns the 1 GB/month LFS bandwidth quota.
+# As plain files they ship inside the Vercel build output and are served
+# from Vercel's CDN instead. Keep them compressed (720p) so the repo and
+# the deployment stay small.
+*.mp4 -text
+*.MP4 -text
+*.MOV -text
+*.mov -text
