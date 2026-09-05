@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { Creator, Reel } from './data/creators';
 import { CreatorCard } from './components/CreatorCard';
+import { BrandShowcase } from './components/BrandShowcase';
 import { Plus, Check, AlertCircle, X, CheckSquare, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -714,11 +715,14 @@ export default function App() {
         </p>
       </div>
 
+      {/* Brand Collaborations Horizontal Scroll Section */}
+      <BrandShowcase />
+
       {/* Roster Block */}
       <div className="section-block">
         <div className="section-header-box">
           <div className="section-header-inner">
-            <span className="section-number">1.</span>
+            <span className="section-number">2.</span>
             <span className="section-title">
               {isAdminView ? 'Manage UGC Roster' : 'UGC Demo Reels'}
             </span>
