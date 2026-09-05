@@ -2299,7 +2299,14 @@
       "Lifestyle",
       "UGC / Product Demos"
     ],
-    "reels": []
+    "reels": [
+      {
+        "id": "reel_DYmdTCqyxOt",
+        "label": "Demo Reel",
+        "videoUrl": "harshuuizzheree.mp4",
+        "coverUrl": "/covers/harshuuizzheree.jpg"
+      }
+    ]
   },
   {
     "id": "creator_1786209132355_18420",
@@ -2542,7 +2549,14 @@
       "Lifestyle",
       "Fitness & Wellness"
     ],
-    "reels": []
+    "reels": [
+      {
+        "id": "reel_DUKlC1ljWLl",
+        "label": "Demo Reel",
+        "videoUrl": "d_manssiiee_09.mp4",
+        "coverUrl": "/covers/d_manssiiee_09.jpg"
+      }
+    ]
   },
   {
     "id": "creator_1786209332860_36197",
@@ -2832,7 +2846,14 @@
       "Fashion & Style",
       "Beauty & Skincare"
     ],
-    "reels": []
+    "reels": [
+      {
+        "id": "reel_DZnMfeAIXUK",
+        "label": "Demo Reel",
+        "videoUrl": "_.parmeet._k.mp4",
+        "coverUrl": "/covers/_.parmeet._k.jpg"
+      }
+    ]
   },
   {
     "id": "creator_1786209640888_11171",
@@ -3362,7 +3383,14 @@
       "Skincare",
       "Lifestyle"
     ],
-    "reels": []
+    "reels": [
+      {
+        "id": "reel_Da7SXh-heLj",
+        "label": "Demo Reel",
+        "videoUrl": "bysimranvirk.mp4",
+        "coverUrl": "/covers/bysimranvirk.jpg"
+      }
+    ]
   },
   {
     "id": "creator_1786210196469_95146",
@@ -3424,7 +3452,14 @@
       "Fashion & Style",
       "Food & Cooking"
     ],
-    "reels": []
+    "reels": [
+      {
+        "id": "reel_Da7uUGeIEgh",
+        "label": "Demo Reel",
+        "videoUrl": "sommyyyyyaaaa.mp4",
+        "coverUrl": "/covers/sommyyyyyaaaa.jpg"
+      }
+    ]
   },
   {
     "id": "creator_1786210223444_45144",
@@ -3465,7 +3500,14 @@
       "Skincare",
       "Lifestyle"
     ],
-    "reels": []
+    "reels": [
+      {
+        "id": "reel_DbINHBITK8t",
+        "label": "Demo Reel",
+        "videoUrl": "taniishkkaajain.mp4",
+        "coverUrl": "/covers/taniishkkaajain.jpg"
+      }
+    ]
   },
   {
     "id": "creator_1786210256421_79143",
